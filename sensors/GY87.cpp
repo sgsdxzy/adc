@@ -141,6 +141,7 @@ void GY87::calibrate(int tolerance)
         if (error < abs(xga)) error = abs(xga);
         if (error < abs(yga)) error = abs(yga);
         if (error < abs(zga)) error = abs(zga);
+        info("Calibrate result:"+to_string(error));
     }
 
     info("Calibration finished!");
