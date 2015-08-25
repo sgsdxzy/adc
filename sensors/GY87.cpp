@@ -1,6 +1,10 @@
 #include "../debug.h"
 #include "GY87.h"
 
+#include <iostream>
+
+using namespace std;
+
 void GY87::initialize()
 {
     // MPU6050
@@ -13,8 +17,6 @@ void GY87::initialize()
     if (mpuStatus != 0) {
         err("MPU6050 DMP setup failed!");
     }
-
-    calibrate(1000);
 
     // Setting HMC5883L
     mpu.setI2CMasterModeEnabled(0);
@@ -59,6 +61,10 @@ void GY87::initialize()
     mpu.setI2CMasterModeEnabled(1);
     //Setting HMC5883L Done
     
+    mpu.setFullScaleAccelRange(0);
+    mpu.setFullScaleGyroRange(0);
+    calibrate(10);
+    
     mpu.setDMPEnabled(true);
     packetSize = mpu.dmpGetFIFOPacketSize();
 
@@ -77,17 +83,17 @@ void GY87::calibrate(int number)
     int16_t yg = mpu.getXGyroOffset();
     int16_t zg = mpu.getXGyroOffset();
 
-    int accRange = pow(2, mpu.getFullScaleAccelRange());
-    int gyroRange = pow(2, mpu.getFullScaleGyroRange());
+    //int accRange = pow(2, mpu.getFullScaleAccelRange());
+    //int gyroRange = pow(2, mpu.getFullScaleGyroRange());
 
-    int g = 16384/accRange; //How much is 1g
+    int g = 16384;///accRange; //How much is 1g
 
     int i=0;
     int xaa=0, yaa=0, zaa=0, xga=0, yga=0, zga=0;
     int16_t ax, ay, az;
     int16_t gx, gy, gz;
 
-    for (i=0;i<number;i++) {
+    for (i=0;i<100;i++) {
         mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
         xaa += ax;
         yaa += ay;
@@ -98,12 +104,14 @@ void GY87::calibrate(int number)
         bcm2835_delay(10);
     }
 
-    mpu.setXAccelOffset(xa-xaa/number*accRange/8);
-    mpu.setYAccelOffset(ya-yaa/number*accRange/8);
-    mpu.setZAccelOffset(za+(-g-zaa)/number*accRange/8);
-    mpu.setXGyroOffset(xg-xga/number*gyroRange/8);
-    mpu.setYGyroOffset(yg-yga/number*gyroRange/8);
-    mpu.setZGyroOffset(zg-zga/number*gyroRange/8);
+    mpu.setXAccelOffset(xa-xaa/800);
+    mpu.setYAccelOffset(ya-yaa/800);
+    mpu.setZAccelOffset(za+(-g-zaa)/800);
+    mpu.setXGyroOffset(xg-xga/800);
+    mpu.setYGyroOffset(yg-yga/800);
+    mpu.setZGyroOffset(zg-zga/800);
+
+    cout << xaa/100 << " " << yaa/100 << " " << zaa/100 <<endl;
 
     info("Calibration finished!");
 }
