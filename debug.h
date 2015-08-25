@@ -6,6 +6,11 @@
 
 using  std::string;
 
+void info(string inf)
+{
+    std::cout << "Info: " << inf << std::endl;
+}
+
 void warn(string info)
 {
     std::cerr << "Warning: " << info << std::endl;

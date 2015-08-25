@@ -14,7 +14,7 @@ void GY87::initialize()
         err("MPU6050 DMP setup failed!");
     }
 
-    setOffset();
+    calibrate(1000);
 
     // Setting HMC5883L
     mpu.setI2CMasterModeEnabled(0);
@@ -67,16 +67,45 @@ void GY87::initialize()
 
 }
 
-void GY87::setOffset()
+void GY87::calibrate(int number)
 {
     // MPU6050
-    mpu.setXAccelOffset(-3591);
-    mpu.setYAccelOffset(-842);
-    mpu.setZAccelOffset(578);
+    int16_t xa = mpu.getXAccelOffset();
+    int16_t ya = mpu.getYAccelOffset();
+    int16_t za = mpu.getZAccelOffset();
+    int16_t xg = mpu.getXGyroOffset();
+    int16_t yg = mpu.getXGyroOffset();
+    int16_t zg = mpu.getXGyroOffset();
 
-    mpu.setXGyroOffset(-51);
-    mpu.setYGyroOffset(-57);
-    mpu.setZGyroOffset(0);
+    accRange = pow(2, mpu.getFullScaleAccelRange());
+    gyroRange = pow(2, mpu.getFullScaleGyroRange());
+
+    g = 16384/accRange; //How much is 1g
+
+    int i=0;
+    int xaa=0, yaa=0, zaa=0, xga=0, yga=0, zga=0;
+    int16_t ax, ay, az;
+    int16_t gx, gy, gz;
+
+    for (i=0;i<number;i++) {
+        getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+        xaa += ax;
+        yaa += ay;
+        zaa += az;
+        xga += gx;
+        yga += gy;
+        zga += gz;
+        bcm2835_delay(10)
+    }
+
+    mpu.setXAccelOffset(xa-xaa/number*accRange/8);
+    mpu.setYAccelOffset(ya-yaa/number*accRange/8);
+    mpu.setZAccelOffset(za+(-g-zaa)/number*accRange/8);
+    mpu.setXGyroOffset(xg-xga/number*gyroRange/8);
+    mpu.setYGyroOffset(yg-yga/number*gyroRange/8);
+    mpu.setZGyroOffset(zg-zga/number*gyroRange/8);
+
+    info("Calibration finished!");
 }
 
 bool GY87::testConnection()
