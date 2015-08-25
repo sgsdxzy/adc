@@ -10,7 +10,7 @@ class GY87 {
         GY87() {};
 
         void initialize();
-        void calibrate();
+        void calibrate(int number);
         bool testConnection();
         void update();
 
