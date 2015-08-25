@@ -95,7 +95,7 @@ void GY87::calibrate(int number)
         xga += gx;
         yga += gy;
         zga += gz;
-        bcm2835_delay(10)
+        bcm2835_delay(10);
     }
 
     mpu.setXAccelOffset(xa-xaa/number*accRange/8);
