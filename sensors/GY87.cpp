@@ -179,7 +179,6 @@ void GY87::update()
         float yh = my*cos(ypr[2])+mz*sin(ypr[2]);
         heading = atan2(-yh, xh);
         if(heading < 0) heading += 2 * M_PI;
-        heading = heading * 180 /M_PI
     }
 }
 

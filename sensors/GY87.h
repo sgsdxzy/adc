@@ -11,6 +11,7 @@ class GY87 {
 
         void initialize();
         void calibrate(int tolerance=10);
+        void setOffset();
         bool testConnection();
         void update();
 
