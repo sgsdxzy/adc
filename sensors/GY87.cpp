@@ -61,9 +61,9 @@ void GY87::initialize()
     mpu.setI2CMasterModeEnabled(1);
     //Setting HMC5883L Done
     
-    mpu.setFullScaleAccelRange(0);
-    mpu.setFullScaleGyroRange(0);
-    calibrate(10);
+    //mpu.setFullScaleAccelRange(0);
+    //mpu.setFullScaleGyroRange(0);
+    setOffset();
     
     mpu.setDMPEnabled(true);
     packetSize = mpu.dmpGetFIFOPacketSize();
@@ -73,45 +73,75 @@ void GY87::initialize()
 
 }
 
-void GY87::calibrate(int number)
+void GY87::setOffset()
+{
+    //Calibrated results
+    mpu.setXAccelOffset(-1557);
+    mpu.setYAccelOffset(3950);
+    mpu.setZAccelOffset(-1962);
+    mpu.setXGyroOffset(-7);
+    mpu.setYGyroOffset(-8);
+    mpu.setZGyroOffset(112);
+}
+
+
+void GY87::calibrate(int tolerance)
 {
     // MPU6050
     int16_t xa = mpu.getXAccelOffset();
     int16_t ya = mpu.getYAccelOffset();
     int16_t za = mpu.getZAccelOffset();
     int16_t xg = mpu.getXGyroOffset();
-    int16_t yg = mpu.getXGyroOffset();
-    int16_t zg = mpu.getXGyroOffset();
+    int16_t yg = mpu.getYGyroOffset();
+    int16_t zg = mpu.getZGyroOffset();
 
-    //int accRange = pow(2, mpu.getFullScaleAccelRange());
-    //int gyroRange = pow(2, mpu.getFullScaleGyroRange());
+    int accRange = pow(2, mpu.getFullScaleAccelRange());
+    int gyroRange = pow(2, mpu.getFullScaleGyroRange());
 
-    int g = 16384;///accRange; //How much is 1g
+    int g = 16384/accRange; //How much is 1g
 
-    int i=0;
-    int xaa=0, yaa=0, zaa=0, xga=0, yga=0, zga=0;
+    int i;
+    int xaa, yaa, zaa, xga, yga, zga;
     int16_t ax, ay, az;
     int16_t gx, gy, gz;
+    int error=32767;
 
-    for (i=0;i<100;i++) {
-        mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-        xaa += ax;
-        yaa += ay;
-        zaa += az;
-        xga += gx;
-        yga += gy;
-        zga += gz;
-        bcm2835_delay(10);
+    i=0;
+    xaa=0, yaa=0, zaa=0, xga=0, yga=0, zga=0;
+
+    while (error > tolerance) {
+        for (i=0;i<100;i++) {
+            mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+            xaa += ax;
+            yaa += ay;
+            zaa += az;
+            xga += gx;
+            yga += gy;
+            zga += gz;
+            bcm2835_delay(10);
+        }
+
+        xaa /= 100;
+        yaa /= 100;
+        zaa /= 100;
+        xga /= 100;
+        yga /= 100;
+        zga /= 100;
+
+        mpu.setXAccelOffset(xa-xaa/8*accRange);
+        mpu.setYAccelOffset(ya-yaa/8*accRange);
+        mpu.setZAccelOffset(za+(-g-zaa)/8*accRange);
+        mpu.setXGyroOffset(xg-xga/8*accRange);
+        mpu.setYGyroOffset(yg-yga/8*accRange);
+        mpu.setZGyroOffset(zg-zga/8*accRange);
+
+        error = abs(xaa);
+        if (error < abs(yaa)) error = abs(yaa);
+        if (error < abs(-g-zaa)) error = abs(zaa);
+        if (error < abs(xga)) error = abs(xga);
+        if (error < abs(yga)) error = abs(yga);
+        if (error < abs(zga)) error = abs(zga);
     }
-
-    mpu.setXAccelOffset(xa-xaa/800);
-    mpu.setYAccelOffset(ya-yaa/800);
-    mpu.setZAccelOffset(za+(-g-zaa)/800);
-    mpu.setXGyroOffset(xg-xga/800);
-    mpu.setYGyroOffset(yg-yga/800);
-    mpu.setZGyroOffset(zg-zga/800);
-
-    cout << xaa/100 << " " << yaa/100 << " " << zaa/100 <<endl;
 
     info("Calibration finished!");
 }
@@ -149,6 +179,7 @@ void GY87::update()
         float yh = my*cos(ypr[2])+mz*sin(ypr[2]);
         heading = atan2(-yh, xh);
         if(heading < 0) heading += 2 * M_PI;
+        heading = heading * 180 /M_PI
     }
 }
 
