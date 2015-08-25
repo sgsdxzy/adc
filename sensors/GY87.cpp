@@ -77,10 +77,10 @@ void GY87::calibrate(int number)
     int16_t yg = mpu.getXGyroOffset();
     int16_t zg = mpu.getXGyroOffset();
 
-    accRange = pow(2, mpu.getFullScaleAccelRange());
-    gyroRange = pow(2, mpu.getFullScaleGyroRange());
+    int accRange = pow(2, mpu.getFullScaleAccelRange());
+    int gyroRange = pow(2, mpu.getFullScaleGyroRange());
 
-    g = 16384/accRange; //How much is 1g
+    int g = 16384/accRange; //How much is 1g
 
     int i=0;
     int xaa=0, yaa=0, zaa=0, xga=0, yga=0, zga=0;
@@ -88,7 +88,7 @@ void GY87::calibrate(int number)
     int16_t gx, gy, gz;
 
     for (i=0;i<number;i++) {
-        getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+        mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
         xaa += ax;
         yaa += ay;
         zaa += az;
