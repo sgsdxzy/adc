@@ -77,7 +77,7 @@ void HMC5883L::initialize() {
  * @return True if connection is valid, false otherwise
  */
 bool HMC5883L::testConnection() {
-    if (I2Cdev::readBytes(devAddr, HMC5883L_RA_ID_A, 3, buffer) == 3) {
+    if (I2Cdev::readBytes(devAddr, HMC5883L_RA_ID_A, 3, buffer)) {
         return (buffer[0] == 'H' && buffer[1] == '4' && buffer[2] == '3');
     }
     return false;
