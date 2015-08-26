@@ -141,7 +141,7 @@ void GY87::calibrate(int samples, int tolerance)
         mpu.setXAccelOffset(xa-xaa/8*accRange);
         mpu.setYAccelOffset(ya-yaa/8*accRange);
         mpu.setZAccelOffset(za+(-g-zaa)/8*accRange);
-        mpu.setXGyroOffset(xg-xga/8*gyrpRange);
+        mpu.setXGyroOffset(xg-xga/8*gyroRange);
         mpu.setYGyroOffset(yg-yga/8*gyroRange);
         mpu.setZGyroOffset(zg-zga/8*gyroRange);
 
