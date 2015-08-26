@@ -62,7 +62,7 @@ void GY87::initialize()
     //Setting HMC5883L Done
     
     mpu.setFullScaleAccelRange(0);
-    mpu.setFullScaleGyroRange(1);
+    mpu.setFullScaleGyroRange(3);
 
     setOffset();
     
@@ -77,12 +77,12 @@ void GY87::initialize()
 void GY87::setOffset()
 {
     //Calibrated results
-    mpu.setXAccelOffset(-1557);
-    mpu.setYAccelOffset(3950);
-    mpu.setZAccelOffset(-1962);
-    mpu.setXGyroOffset(-7);
-    mpu.setYGyroOffset(-8);
-    mpu.setZGyroOffset(112);
+    mpu.setXAccelOffset(-1556);
+    mpu.setYAccelOffset(3945);
+    mpu.setZAccelOffset(1820);
+    mpu.setXGyroOffset(0);
+    mpu.setYGyroOffset(-6);
+    mpu.setZGyroOffset(108);
 }
 
 
@@ -140,7 +140,7 @@ void GY87::calibrate(int samples, int tolerance)
 
         mpu.setXAccelOffset(xa-xaa/8*accRange);
         mpu.setYAccelOffset(ya-yaa/8*accRange);
-        mpu.setZAccelOffset(za+(-g-zaa)/8*accRange);
+        mpu.setZAccelOffset(za+(g-zaa)/8*accRange);
         mpu.setXGyroOffset(xg-xga/8*gyroRange);
         mpu.setYGyroOffset(yg-yga/8*gyroRange);
         mpu.setZGyroOffset(zg-zga/8*gyroRange);
