@@ -137,9 +137,10 @@ void GY87::updateMPU()
         mpu.resetFIFO();
         warn("FIFO Overflow!");
     } else {
-        while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();
+        while (fifoCount < packetSize) {
+            fifoCount = mpu.getFIFOCount();
+        }
         mpu.getFIFOBytes(fifoBuffer, packetSize);
-
         mpu.dmpGetQuaternion(&q, fifoBuffer);
         mpu.dmpGetGyro(gyro, fifoBuffer);
         mpu.dmpGetAccel(&aa, fifoBuffer);  //Use this if you want accelerometer measures
@@ -147,6 +148,7 @@ void GY87::updateMPU()
         mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
         mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);  //Use this to get linear acceleration apart from gravity.
         mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);  //NOT RECOMMENDED. Gives you linear acceleration rotated to initial position.
+err("g");
    }
 }
 
