@@ -13,6 +13,7 @@ class GY87 {
         void calibrate(int samples=100, int tolerance=10);
         void setOffset();
         bool testConnection();
+        void startDMP();
         void update();
 
         // MPU6050+HMC5883L

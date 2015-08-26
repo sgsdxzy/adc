@@ -157,6 +157,11 @@ bool GY87::testConnection()
     return mpu.testConnection() && bmp.testConnection();
 }  
 
+void GY87::startDMP()
+{
+    mpu.setDMPEnabled(true);
+}    
+
 void GY87::update()
 {
     fifoCount = mpu.getFIFOCount();
