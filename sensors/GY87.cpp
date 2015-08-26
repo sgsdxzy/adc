@@ -61,14 +61,9 @@ void GY87::initialize()
     mpu.setI2CMasterModeEnabled(1);
     //Setting HMC5883L Done
     
-    mpu.setFullScaleAccelRange(0);
-    mpu.setFullScaleGyroRange(3);
-
     setOffset();
     
-    mpu.setDMPEnabled(true);
     packetSize = mpu.dmpGetFIFOPacketSize();
-
 
     //BMP085 TODO
 
