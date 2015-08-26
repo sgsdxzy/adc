@@ -14,28 +14,33 @@ class GY87 {
         void setOffset();
         bool testConnection();
         void startDMP();
-        void update();
 
-        // MPU6050+HMC5883L
+        void updateMPU();
+        void updateHMC();
+        void updateBMP();
+
+        // Devices
         MPU6050 mpu;
+        HMC5883L hmc;
+        BMP085 bmp;
 
+        // MPU6050
         uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
         uint16_t fifoCount;     // count of all bytes currently in FIFO
-        uint8_t fifoBuffer[42]; // FIFO storage buffer
-
+        uint8_t fifoBuffer[64]; // FIFO storage buffer
         Quaternion q;           // [w, x, y, z]         quaternion container
         VectorInt16 aa;         // [x, y, z]            accel sensor measurements
         int16_t gyro[3];        //To store gyro's measures
-        int16_t mx, my, mz;     //To store magnetometer readings
         VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
         VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
         VectorFloat gravity;    // [x, y, z]            gravity vector
         float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+
+        // HMC5883L
+        int16_t mx, my, mz;     //To store magnetometer readings
         float heading;          // Simple magnetic heading.
 
-
         // BMP085 
-        BMP085 bmp;
         //TODO
 
 };

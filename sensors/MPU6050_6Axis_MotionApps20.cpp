@@ -47,7 +47,7 @@ uint8_t MPU6050::dmpInitialize() {
     DEBUG_PRINTLN(zgOffsetTC);
 
     // setup weird slave stuff (?)
-    DEBUG_PRINTLN(F("Setting slave 0 address to 0x7F..."));
+/*    DEBUG_PRINTLN(F("Setting slave 0 address to 0x7F..."));
     setSlaveAddress(0, 0x7F);
     DEBUG_PRINTLN(F("Disabling I2C Master mode..."));
     setI2CMasterModeEnabled(false);
@@ -56,7 +56,7 @@ uint8_t MPU6050::dmpInitialize() {
     DEBUG_PRINTLN(F("Resetting I2C Master control..."));
     resetI2CMaster();
     delay(20);
-
+*/
     // load DMP code into memory banks
     DEBUG_PRINT(F("Writing DMP code to MPU memory banks ("));
     DEBUG_PRINT(MPU6050_DMP_CODE_SIZE);
@@ -75,13 +75,13 @@ uint8_t MPU6050::dmpInitialize() {
             setClockSource(MPU6050_CLOCK_PLL_ZGYRO);
 
             DEBUG_PRINTLN(F("Setting DMP and FIFO_OFLOW interrupts enabled..."));
-            setIntEnabled(0x12);
+            setIntEnabled(0x00); // Interrupts are unfeasible on pi
 
             DEBUG_PRINTLN(F("Setting sample rate to 200Hz..."));
             setRate(4); // 1khz / (1 + 4) = 200 Hz
 
             DEBUG_PRINTLN(F("Setting external frame sync to TEMP_OUT_L[0]..."));
-            setExternalFrameSync(MPU6050_EXT_SYNC_TEMP_OUT_L);
+            setExternalFrameSync(MPU6050_EXT_SYNC_GYRO_ZOUT_L);
 
             DEBUG_PRINTLN(F("Setting DLPF bandwidth to 42Hz..."));
             setDLPFMode(MPU6050_DLPF_BW_42);
