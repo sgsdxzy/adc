@@ -174,15 +174,19 @@ void GY87::updateMPU()
         while (fifoCount < packetSize) {
             fifoCount = mpu.getFIFOCount();
         }
+        //Continue until fifo is clear
+        while (fifoCount >= packetSize) {
+            mpu.getFIFOBytes(fifoBuffer, packetSize);
+            fifoCount = mpu.getFIFOCount();
+        }
 
-        mpu.getFIFOBytes(fifoBuffer, packetSize);
         mpu.dmpGetQuaternion(&q, fifoBuffer);
-        mpu.dmpGetGyro(gyro, fifoBuffer);
+        //mpu.dmpGetGyro(gyro, fifoBuffer);
         mpu.dmpGetAccel(&aa, fifoBuffer);  //Use this if you want accelerometer measures
         mpu.dmpGetGravity(&gravity, &q);
         mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-        mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);  //Use this to get linear acceleration apart from gravity.
-        mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);  //NOT RECOMMENDED. Gives you linear acceleration rotated to initial position.
+        mpu.dmpGetLinearAccel(aaReal, &aa, &gravity);  //Use this to get linear acceleration apart from gravity.
+        mpu.dmpGetLinearAccelInWorld(aaWorld, aaReal, &q);  //NOT RECOMMENDED. Gives you linear acceleration rotated to initial position.
 
         //Read magnetometer measures
         mx=mpu.getExternalSensorWord(0);
