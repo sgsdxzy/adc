@@ -19,11 +19,14 @@ class GY87 {
         void getMPUData();
         void getBMPData();
 
-
         std::atomic<float> ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
         std::atomic<float> heading;          // Magnetic heading.
         std::atomic<int16_t> aaReal[3];
         std::atomic<int16_t> aaWorld[3];
+        std::atomic<float> temperature;
+        std::atomic<float> pressure;
+        std::atomic<float> altitude;
+        
 
     private:
         // Devices

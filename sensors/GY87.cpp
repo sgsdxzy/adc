@@ -4,11 +4,11 @@
 void GY87::initialize()
 {
     // Setting MPU6050
-    mpu.initialize();
     if (!mpu.testConnection()) {
         // Test failed
         err("MPU6050 test connection failed!");
     }
+    mpu.initialize();
     uint8_t mpuStatus = mpu.dmpInitialize();
     if (mpuStatus != 0) {
         err("MPU6050 DMP setup failed! Code: "+to_string(mpuStatus));
@@ -22,7 +22,6 @@ void GY87::initialize()
     mpu.setI2CBypassEnabled(1);
     // Now we can see HMC5883L
     HMC5883L hmc(HMC5883L_DEFAULT_ADDRESS);
-    hmc.initialize();
     if (!hmc.testConnection()) {
         // Test failed
         err("HMC5883L test connection failed!");
@@ -68,7 +67,12 @@ void GY87::initialize()
     mpu.setSlaveDelayEnabled(1, true);
     mpu.setSlaveDelayEnabled(2, true);
 
-    //BMP085 TODO
+    //BMP085
+    if (!bmp.testConnection()) {
+        // Test failed
+        err("BMP180 test connection failed!");
+    }
+    bmp.initialize();
 }
 
 void GY87::setOffset()
@@ -202,5 +206,11 @@ void GY87::updateMPU()
 
 void GY87::updateBMP()
 {
-    //TODO
+    bmp.setControl(BMP085_MODE_TEMPERATURE);
+    bcm2835_delay(5); // wait 5 ms for conversion 
+    temperature = bmp.getTemperatureC();
+    bmp.setControl(BMP085_MODE_PRESSURE_3) ; //taking reading in highest accuracy measurement mode
+    bcm2835_delay( barometer.getMeasureDelayMicroseconds() / 1000 );
+    pressure = bmp.getPressure();
+    altitude = bmp.getAltitude(pressure);
 }
