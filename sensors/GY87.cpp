@@ -64,7 +64,9 @@ void GY87::initialize()
     
     // Setting MPU6050 slave sample rate to 100Hz
     mpu.setSlave4MasterDelay(1); // 200/(1+1)=100
-    mpu.setSlaveDelayEnabled(true);
+    mpu.setSlaveDelayEnabled(0, true);
+    mpu.setSlaveDelayEnabled(1, true);
+    mpu.setSlaveDelayEnabled(2, true);
 
     //BMP085 TODO
 }
@@ -183,9 +185,9 @@ void GY87::updateMPU()
         mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);  //NOT RECOMMENDED. Gives you linear acceleration rotated to initial position.
 
         //Read magnetometer measures
-        mx=mpu.getExternalSensorWord(0)；
-        my=mpu.getExternalSensorWord(2)；
-        mz=mpu.getExternalSensorWord(4)；
+        mx=mpu.getExternalSensorWord(0);
+        my=mpu.getExternalSensorWord(2);
+        mz=mpu.getExternalSensorWord(4);
 
         float xh = mx*cos(ypr[1])+my*sin(ypr[1])*sin(ypr[2])+mz*sin(ypr[1])*cos(ypr[2]);
         float yh = my*cos(ypr[2])+mz*sin(ypr[2]);
