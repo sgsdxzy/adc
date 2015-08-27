@@ -16,8 +16,8 @@ class GY87 {
         bool testConnection();
         void startDMP();
 
-        void getMPUData();
-        void getBMPData();
+        void updateMPU();
+        void updateBMP();
 
         std::atomic<float> ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
         std::atomic<float> heading;          // Magnetic heading.
