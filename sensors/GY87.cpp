@@ -169,28 +169,42 @@ void GY87::startDMP()
 
 void GY87::updateMPU()
 {
+warn("getting fifo count");
     fifoCount = mpu.getFIFOCount();
     if (fifoCount == 1024) {
         // Overflow, reset so we can continue cleanly
+warn("resetting fifo");
         mpu.resetFIFO();
         warn("FIFO Overflow!");
     } else {
         while (fifoCount < packetSize) {
             fifoCount = mpu.getFIFOCount();
         }
+        /*
         //Continue until fifo is clear
         while (fifoCount >= packetSize) {
             mpu.getFIFOBytes(fifoBuffer, packetSize);
             fifoCount = mpu.getFIFOCount();
-        }
+        }*/
+warn("reading fifo buffer");
+        mpu.getFIFOBytes(fifoBuffer, packetSize);
 
+        Quaternion q;
+        VectorInt16 aa;
+        VectorInt16 aaReal;
+        VectorInt16 aaWorld;
+        VectorFloat gravity;
+        float ypr[3];
+        int16_t mx, my, mz;
+
+warn("getting data");
         mpu.dmpGetQuaternion(&q, fifoBuffer);
         //mpu.dmpGetGyro(gyro, fifoBuffer);
         mpu.dmpGetAccel(&aa, fifoBuffer);  //Use this if you want accelerometer measures
         mpu.dmpGetGravity(&gravity, &q);
         mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-        mpu.dmpGetLinearAccel(aaReal, &aa, &gravity);  //Use this to get linear acceleration apart from gravity.
-        mpu.dmpGetLinearAccelInWorld(aaWorld, aaReal, &q);  //NOT RECOMMENDED. Gives you linear acceleration rotated to initial position.
+        mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);  //Use this to get linear acceleration apart from gravity.
+        mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);  //NOT RECOMMENDED. Gives you linear acceleration rotated to initial position.
 
         //Read magnetometer measures
         mx=mpu.getExternalSensorWord(0);
@@ -199,8 +213,22 @@ void GY87::updateMPU()
 
         float xh = mx*cos(ypr[1])+my*sin(ypr[1])*sin(ypr[2])+mz*sin(ypr[1])*cos(ypr[2]);
         float yh = my*cos(ypr[2])+mz*sin(ypr[2]);
-        heading = atan2(-yh, xh);
-        if(heading < 0) heading += 2 * M_PI;
+        float mh = atan2(-yh, xh);
+        if(mh < 0) mh += 2 * M_PI;
+
+warn("updating data");
+        //Atomic value assign
+        yaw = ypr[0];
+        pitch = ypr[1];
+        roll = ypr[2];
+        heading = mh;
+        axRelative = aaReal.x;
+        ayRelative = aaReal.y;
+        azRelative = aaReal.z;
+        axAbsolute = aaWorld.x;
+        ayAbsolute = aaWorld.y;
+        azAbsolute = aaWorld.z;
+warn("updating finished");
    }
 }
 
@@ -210,7 +238,8 @@ void GY87::updateBMP()
     bcm2835_delay(5); // wait 5 ms for conversion 
     temperature = bmp.getTemperatureC();
     bmp.setControl(BMP085_MODE_PRESSURE_3) ; //taking reading in highest accuracy measurement mode
-    bcm2835_delay( barometer.getMeasureDelayMicroseconds() / 1000 );
+    bcm2835_delay(bmp.getMeasureDelayMicroseconds() / 1000);
+    warn("BMP!");
     pressure = bmp.getPressure();
     altitude = bmp.getAltitude(pressure);
 }

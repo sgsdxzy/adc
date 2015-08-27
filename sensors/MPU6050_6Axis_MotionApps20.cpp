@@ -337,22 +337,19 @@ uint8_t MPU6050::dmpGetGyro(VectorInt16 *v, const uint8_t* packet) {
 }
 // uint8_t MPU6050::dmpSetLinearAccelFilterCoefficient(float coef);
 // uint8_t MPU6050::dmpGetLinearAccel(long *data, const uint8_t* packet);
-uint8_t MPU6050::dmpGetLinearAccel(int16_t *data, VectorInt16 *vRaw, VectorFloat *gravity) {
+uint8_t MPU6050::dmpGetLinearAccel(VectorInt16 *v, VectorInt16 *vRaw, VectorFloat *gravity) {
     // get rid of the gravity component (+1g = +8192 in standard DMP FIFO packet, sensitivity is 2g)
-    data[0] = vRaw -> x - gravity -> x*8192;
-    data[1] = vRaw -> y - gravity -> y*8192;
-    data[2] = vRaw -> z - gravity -> z*8192;
+    v -> x = vRaw -> x - gravity -> x*8192;
+    v -> y = vRaw -> y - gravity -> y*8192;
+    v -> z = vRaw -> z - gravity -> z*8192;
     return 0;
 }
 // uint8_t MPU6050::dmpGetLinearAccelInWorld(long *data, const uint8_t* packet);
-uint8_t MPU6050::dmpGetLinearAccelInWorld(int16_t *data, int16_t *vReal, Quaternion *q) {
+uint8_t MPU6050::dmpGetLinearAccelInWorld(VectorInt16 *v, VectorInt16 *vReal, Quaternion *q) {
     // rotate measured 3D acceleration vector into original state
     // frame of reference based on orientation quaternion
-    VectorInt16 v(vReal[0], vReal[1], vReal[2]);
-    v.rotate(q);
-    data[0] = v.x;
-    data[1] = v.y;
-    data[2] = v.z;
+    memcpy(v, vReal, sizeof(VectorInt16));
+    v -> rotate(q);
     return 0;
 }
 // uint8_t MPU6050::dmpGetGyroAndAccelSensor(long *data, const uint8_t* packet);
