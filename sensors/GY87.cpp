@@ -60,7 +60,11 @@ void GY87::initialize()
     mpu.setSlaveDataLength(2, 2);
 
     mpu.setI2CMasterModeEnabled(1);
-    //Setting HMC5883L Done
+    // Setting HMC5883L Done
+    
+    // Setting MPU6050 slave sample rate to 100Hz
+    mpu.setSlave4MasterDelay(1); // 200/(1+1)=100
+    mpu.setSlaveDelayEnabled(true);
 
     //BMP085 TODO
 }
