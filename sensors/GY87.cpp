@@ -169,67 +169,57 @@ void GY87::startDMP()
 
 void GY87::updateMPU()
 {
-warn("getting fifo count");
     fifoCount = mpu.getFIFOCount();
     if (fifoCount == 1024) {
         // Overflow, reset so we can continue cleanly
-warn("resetting fifo");
         mpu.resetFIFO();
         warn("FIFO Overflow!");
-    } else {
-        while (fifoCount < packetSize) {
-            fifoCount = mpu.getFIFOCount();
-        }
-        /*
-        //Continue until fifo is clear
-        while (fifoCount >= packetSize) {
-            mpu.getFIFOBytes(fifoBuffer, packetSize);
-            fifoCount = mpu.getFIFOCount();
-        }*/
-warn("reading fifo buffer");
-        mpu.getFIFOBytes(fifoBuffer, packetSize);
+        return;
+    } 
+    if (fifoCount < packetSize) {
+        warn("Interrupt received but data not ready!");
+        return;
+    }
 
-        Quaternion q;
-        VectorInt16 aa;
-        VectorInt16 aaReal;
-        VectorInt16 aaWorld;
-        VectorFloat gravity;
-        float ypr[3];
-        int16_t mx, my, mz;
+    mpu.getFIFOBytes(fifoBuffer, packetSize);
 
-warn("getting data");
-        mpu.dmpGetQuaternion(&q, fifoBuffer);
-        //mpu.dmpGetGyro(gyro, fifoBuffer);
-        mpu.dmpGetAccel(&aa, fifoBuffer);  //Use this if you want accelerometer measures
-        mpu.dmpGetGravity(&gravity, &q);
-        mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-        mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);  //Use this to get linear acceleration apart from gravity.
-        mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);  //NOT RECOMMENDED. Gives you linear acceleration rotated to initial position.
+    Quaternion q;
+    VectorInt16 aa;
+    VectorInt16 aaReal;
+    VectorInt16 aaWorld;
+    VectorFloat gravity;
+    float ypr[3];
+    int16_t mx, my, mz;
 
-        //Read magnetometer measures
-        mx=mpu.getExternalSensorWord(0);
-        my=mpu.getExternalSensorWord(2);
-        mz=mpu.getExternalSensorWord(4);
+    mpu.dmpGetQuaternion(&q, fifoBuffer);
+    //mpu.dmpGetGyro(gyro, fifoBuffer);
+    mpu.dmpGetAccel(&aa, fifoBuffer);  //Use this if you want accelerometer measures
+    mpu.dmpGetGravity(&gravity, &q);
+    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+    mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);  //Use this to get linear acceleration apart from gravity.
+    mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);  //NOT RECOMMENDED. Gives you linear acceleration rotated to initial position.
 
-        float xh = mx*cos(ypr[1])+my*sin(ypr[1])*sin(ypr[2])+mz*sin(ypr[1])*cos(ypr[2]);
-        float yh = my*cos(ypr[2])+mz*sin(ypr[2]);
-        float mh = atan2(-yh, xh);
-        if(mh < 0) mh += 2 * M_PI;
+    //Read magnetometer measures
+    mx=mpu.getExternalSensorWord(0);
+    my=mpu.getExternalSensorWord(2);
+    mz=mpu.getExternalSensorWord(4);
 
-warn("updating data");
-        //Atomic value assign
-        yaw = ypr[0];
-        pitch = ypr[1];
-        roll = ypr[2];
-        heading = mh;
-        axRelative = aaReal.x;
-        ayRelative = aaReal.y;
-        azRelative = aaReal.z;
-        axAbsolute = aaWorld.x;
-        ayAbsolute = aaWorld.y;
-        azAbsolute = aaWorld.z;
-warn("updating finished");
-   }
+    float xh = mx*cos(ypr[1])+my*sin(ypr[1])*sin(ypr[2])+mz*sin(ypr[1])*cos(ypr[2]);
+    float yh = my*cos(ypr[2])+mz*sin(ypr[2]);
+    float mh = atan2(-yh, xh);
+    if(mh < 0) mh += 2 * M_PI;
+
+    //Atomic value assign
+    yaw = ypr[0];
+    pitch = ypr[1];
+    roll = ypr[2];
+    heading = mh;
+    axRelative = aaReal.x;
+    ayRelative = aaReal.y;
+    azRelative = aaReal.z;
+    axAbsolute = aaWorld.x;
+    ayAbsolute = aaWorld.y;
+    azAbsolute = aaWorld.z;
 }
 
 void GY87::updateBMP()
@@ -238,8 +228,7 @@ void GY87::updateBMP()
     bcm2835_delay(5); // wait 5 ms for conversion 
     temperature = bmp.getTemperatureC();
     bmp.setControl(BMP085_MODE_PRESSURE_3) ; //taking reading in highest accuracy measurement mode
-    bcm2835_delay(bmp.getMeasureDelayMicroseconds() / 1000);
-    warn("BMP!");
+    bcm2835_delay(27);
     pressure = bmp.getPressure();
     altitude = bmp.getAltitude(pressure);
 }

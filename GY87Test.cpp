@@ -4,21 +4,23 @@
 
 GY87 gy;
 
+pthread_mutex_t i2cmutex = PTHREAD_MUTEX_INITIALIZER;
+
 using namespace std;
 void alerter(int gpio, int level, uint32_t tick)
 {
     if (level==1) {
-        printf("Interrupt!\n");
+        pthread_mutex_lock(&i2cmutex);
         gy.updateMPU();
-        printf("Interrupt done\n");
+        pthread_mutex_unlock(&i2cmutex);
     }
 }
 
 void updater()
 {
-    printf("BMP!");
+    pthread_mutex_lock(&i2cmutex);
     gy.updateBMP();
-    printf("BMP done!");
+    pthread_mutex_unlock(&i2cmutex);
 }
 
 int main()
@@ -35,14 +37,11 @@ int main()
     gpioSetMode(23, PI_INPUT);
 
     gpioSetAlertFunc(23, alerter);
-    //gpioSetTimerFunc(0, 1000, updater);
+    gpioSetTimerFunc(0, 100, updater);
 
     printf("Waiting...\n");
     gy.startDMP();
     while (true) {
-        printf("BMP!");
-        gy.updateBMP();
-        printf("BMP done!");
         gpioDelay(100000);
         yaw=gy.yaw;
         pitch=gy.pitch;

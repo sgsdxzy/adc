@@ -7,19 +7,8 @@
 using  std::string;
 using  std::to_string;
 
-void info(string inf)
-{
-    std::cout << "Info: " << inf << std::endl;
-}
-
-void warn(string info)
-{
-    std::cerr << "Warning: " << info << std::endl;
-}
-
-void err(string info)
-{
-    std::cerr << "Error: " << info << std::endl;
-}
+void info(string inf);
+void warn(string info);
+void err(string info);
 
 #endif // _DEBUG_ADC_
