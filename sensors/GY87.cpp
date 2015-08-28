@@ -169,6 +169,8 @@ void GY87::startDMP()
 
 void GY87::updateMPU()
 {
+    // Making I2C operations thread-safe
+    pthread_mutex_lock(&I2Cdev::i2cMutex);
     fifoCount = mpu.getFIFOCount();
     if (fifoCount == 1024) {
         // Overflow, reset so we can continue cleanly
@@ -180,8 +182,12 @@ void GY87::updateMPU()
         warn("Interrupt received but data not ready!");
         return;
     }
-
     mpu.getFIFOBytes(fifoBuffer, packetSize);
+    //Read magnetometer measures
+    mx=mpu.getExternalSensorWord(0);
+    my=mpu.getExternalSensorWord(2);
+    mz=mpu.getExternalSensorWord(4);
+    pthread_mutex_unlock(&I2Cdev::i2cMutex);
 
     Quaternion q;
     VectorInt16 aa;
@@ -198,11 +204,6 @@ void GY87::updateMPU()
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
     mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);  //Use this to get linear acceleration apart from gravity.
     mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);  //NOT RECOMMENDED. Gives you linear acceleration rotated to initial position.
-
-    //Read magnetometer measures
-    mx=mpu.getExternalSensorWord(0);
-    my=mpu.getExternalSensorWord(2);
-    mz=mpu.getExternalSensorWord(4);
 
     float xh = mx*cos(ypr[1])+my*sin(ypr[1])*sin(ypr[2])+mz*sin(ypr[1])*cos(ypr[2]);
     float yh = my*cos(ypr[2])+mz*sin(ypr[2]);
@@ -224,6 +225,8 @@ void GY87::updateMPU()
 
 void GY87::updateBMP()
 {
+    pthread_mutex_lock(&I2Cdev::i2cMutex);
+
     bmp.setControl(BMP085_MODE_TEMPERATURE);
     bcm2835_delay(5); // wait 5 ms for conversion 
     temperature = bmp.getTemperatureC();
@@ -231,4 +234,6 @@ void GY87::updateBMP()
     bcm2835_delay(27);
     pressure = bmp.getPressure();
     altitude = bmp.getAltitude(pressure);
+
+    pthread_mutex_unlock(&I2Cdev::i2cMutex);
 }

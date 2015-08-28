@@ -4,23 +4,21 @@
 
 GY87 gy;
 
-pthread_mutex_t i2cmutex = PTHREAD_MUTEX_INITIALIZER;
-
 using namespace std;
 void alerter(int gpio, int level, uint32_t tick)
 {
     if (level==1) {
-        pthread_mutex_lock(&i2cmutex);
+        //pthread_mutex_lock(&i2cmutex);
         gy.updateMPU();
-        pthread_mutex_unlock(&i2cmutex);
+        //pthread_mutex_unlock(&i2cmutex);
     }
 }
 
 void updater()
 {
-    pthread_mutex_lock(&i2cmutex);
+    //pthread_mutex_lock(&i2cmutex);
     gy.updateBMP();
-    pthread_mutex_unlock(&i2cmutex);
+    //pthread_mutex_unlock(&i2cmutex);
 }
 
 int main()
