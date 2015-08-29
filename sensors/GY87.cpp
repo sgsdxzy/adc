@@ -231,7 +231,7 @@ void GY87::updateBMP()
     bcm2835_delay(5); // wait 5 ms for conversion 
     temperature = bmp.getTemperatureC();
     bmp.setControl(BMP085_MODE_PRESSURE_3) ; //taking reading in highest accuracy measurement mode
-    bcm2835_delay(27);
+    bcm2835_delay(26);
     pressure = bmp.getPressure();
     altitude = bmp.getAltitude(pressure);
 
