@@ -57,7 +57,7 @@ int main()
         heading=gy87.heading/M_PI*180;
         alt=gy87.altitude;
         az=gy87.azAbsolute;
-        gyro=gy87.
+        gyro=gy87.gz;
         i++;
         if (i==100) {
             filter.altitude=alt;
@@ -65,7 +65,7 @@ int main()
             gpioSetTimerFunc(1, 10, filterUpdater);
         }
         falt=filter.altitude;
-        printf(" %.2f \t %.2f \t %.2f \t %.0f \t %.1f \t %.1f \t %i\n", yaw, pitch, roll, heading, alt, falt, az);
+        printf(" %.2f \t %.2f \t %.2f \t %i \t %.1f \t %.1f \t %i\n", yaw, pitch, roll, gyro, alt, falt, az);
         fflush(stdout);
     }
     printf("Quit\n");
