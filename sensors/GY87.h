@@ -20,8 +20,9 @@ class GY87 {
         void updateMPU();
         void updateBMP(float seaLevelPressure);
 
-        std::atomic<float> yaw, pitch, roll;           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+        std::atomic<float> yaw, pitch, roll;           // [yaw, pitch, roll]
         std::atomic<float> heading;          // Magnetic heading.
+        std::atomic<int16_t> gx, gy, gz; // Gyroscope data
         std::atomic<int16_t> axRelative, ayRelative, azRelative;
         std::atomic<int16_t> axAbsolute, ayAbsolute, azAbsolute;
         std::atomic<float> temperature;

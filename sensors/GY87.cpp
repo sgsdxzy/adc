@@ -193,12 +193,13 @@ void GY87::updateMPU()
     VectorInt16 aa;
     VectorInt16 aaReal;
     VectorInt16 aaWorld;
+    VectorInt16 gyro;
     VectorFloat gravity;
     float ypr[3];
     int16_t mx, my, mz;
 
     mpu.dmpGetQuaternion(&q, fifoBuffer);
-    //mpu.dmpGetGyro(gyro, fifoBuffer);
+    mpu.dmpGetGyro(&gyro, fifoBuffer);
     mpu.dmpGetAccel(&aa, fifoBuffer);  //Use this if you want accelerometer measures
     mpu.dmpGetGravity(&gravity, &q);
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
@@ -215,6 +216,9 @@ void GY87::updateMPU()
     pitch = ypr[1];
     roll = ypr[2];
     heading = mh;
+    gx = gyro.x;
+    gy = gyro.y;
+    gz = gyro.z;
     axRelative = aaReal.x;
     ayRelative = aaReal.y;
     azRelative = aaReal.z;

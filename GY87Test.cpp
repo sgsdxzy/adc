@@ -1,8 +1,6 @@
-#include "sensors/GY87.h"
+#include "sensors/sensors.h"
 #include <stdio.h>
 #include <pigpio.h>
-
-GY87 gy;
 
 using namespace std;
 void alerter(int gpio, int level, uint32_t tick)
