@@ -1,3 +1,4 @@
+#include <pigpio.h>
 #include "../debug.h"
 #include "GY87.h"
 
@@ -13,6 +14,7 @@ void GY87::initialize()
     if (mpuStatus != 0) {
         err("MPU6050 DMP setup failed! Code: "+to_string(mpuStatus));
     }
+    BMPCounter = 0;
     packetSize = mpu.dmpGetFIFOPacketSize();
     setOffset();
     // Setting MPU6050 done
@@ -169,6 +171,15 @@ void GY87::startDMP()
 
 void GY87::updateMPU()
 {
+    Quaternion q;
+    VectorInt16 aa;
+    VectorInt16 aaReal;
+    VectorInt16 aaWorld;
+    VectorInt16 gyro;
+    VectorFloat gravity;
+    float ypr[3];
+    int16_t mx, my, mz;
+
     // Making I2C operations thread-safe
     pthread_mutex_lock(&i2cMutex);
     fifoCount = mpu.getFIFOCount();
@@ -188,15 +199,6 @@ void GY87::updateMPU()
     my=mpu.getExternalSensorWord(2);
     mz=mpu.getExternalSensorWord(4);
     pthread_mutex_unlock(&i2cMutex);
-
-    Quaternion q;
-    VectorInt16 aa;
-    VectorInt16 aaReal;
-    VectorInt16 aaWorld;
-    VectorInt16 gyro;
-    VectorFloat gravity;
-    float ypr[3];
-    int16_t mx, my, mz;
 
     mpu.dmpGetQuaternion(&q, fifoBuffer);
     mpu.dmpGetGyro(&gyro, fifoBuffer);
@@ -229,20 +231,26 @@ void GY87::updateMPU()
 
 void GY87::updateBMP(float seaLevelPressure)
 {
-    pthread_mutex_lock(&i2cMutex);
-    bmp.setControl(BMP085_MODE_TEMPERATURE);
-    pthread_mutex_unlock(&i2cMutex);
+    if (BMPCounter == 0) {
+        pthread_mutex_lock(&i2cMutex);
+        bmp.setControl(BMP085_MODE_TEMPERATURE);
+        pthread_mutex_unlock(&i2cMutex);
+        gpioDelay(4500); // wait 4.5 ms for conversion 
+        pthread_mutex_lock(&i2cMutex);
+        temperature = bmp.getTemperatureC();
+        pthread_mutex_unlock(&i2cMutex);
+    } else {
+        pthread_mutex_lock(&i2cMutex);
+        bmp.setControl(BMP085_MODE_PRESSURE_1) ; //taking reading in highest accuracy measurement mode
+        pthread_mutex_unlock(&i2cMutex);
+        gpioDelay(7500);
+        pthread_mutex_lock(&i2cMutex);
+        pressure = bmp.getPressure();
+        pthread_mutex_unlock(&i2cMutex);
 
-    bcm2835_delay(5); // wait 5 ms for conversion 
-    pthread_mutex_lock(&i2cMutex);
-    temperature = bmp.getTemperatureC();
-    bmp.setControl(BMP085_MODE_PRESSURE_3) ; //taking reading in highest accuracy measurement mode
-    pthread_mutex_unlock(&i2cMutex);
+        altitude = bmp.getAltitude(pressure, seaLevelPressure);
+    }
 
-    bcm2835_delay(26);
-    pthread_mutex_lock(&i2cMutex);
-    pressure = bmp.getPressure();
-    pthread_mutex_unlock(&i2cMutex);
-
-    altitude = bmp.getAltitude(pressure, seaLevelPressure);
+    BMPCounter += 1;
+    BMPCounter = BMPCounter % 100;
 }
