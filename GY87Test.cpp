@@ -43,6 +43,7 @@ int main()
 
     int az;
     int i=0;
+    int gyro;
 
     printf("Waiting...\n");
     gpioSetAlertFunc(4, alerter);
@@ -56,6 +57,7 @@ int main()
         heading=gy87.heading/M_PI*180;
         alt=gy87.altitude;
         az=gy87.azAbsolute;
+        gyro=gy87.
         i++;
         if (i==100) {
             filter.altitude=alt;
