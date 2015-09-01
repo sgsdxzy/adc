@@ -23,7 +23,7 @@ void PID::updateESC()
     error[3] = target[3] - filter.altitude;
 
     for (i=0;i<4;i++) {
-        errorI += error[i];
+        errorI[i] += error[i];
     }
 
     float errorD[4];

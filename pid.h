@@ -30,7 +30,7 @@ class PID
 
         int outMin = 1200;
         int outMax = 2000;
-}
+};
 
 #endif // _PID_H_
 
