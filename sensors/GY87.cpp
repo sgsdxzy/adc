@@ -1,3 +1,4 @@
+#include <pigpio.h>
 #include "../debug.h"
 #include "GY87.h"
 
@@ -80,7 +81,7 @@ void GY87::setOffset()
     //Calibrated results
     mpu.setXAccelOffset(-1688);
     mpu.setYAccelOffset(3949);
-    mpu.setZAccelOffset(1845);
+    mpu.setZAccelOffset(1844);
     mpu.setXGyroOffset(0);
     mpu.setYGyroOffset(-11);
     mpu.setZGyroOffset(106);
@@ -169,6 +170,14 @@ void GY87::startDMP()
 
 void GY87::updateMPU()
 {
+    int16_t mx, my, mz;
+    Quaternion q;
+    VectorInt16 aa;
+    VectorInt16 aaReal;
+    VectorInt16 aaWorld;
+    VectorFloat gravity;
+    float ypr[3];
+
     // Making I2C operations thread-safe
     pthread_mutex_lock(&i2cMutex);
     fifoCount = mpu.getFIFOCount();
@@ -188,14 +197,6 @@ void GY87::updateMPU()
     my=mpu.getExternalSensorWord(2);
     mz=mpu.getExternalSensorWord(4);
     pthread_mutex_unlock(&i2cMutex);
-
-    Quaternion q;
-    VectorInt16 aa;
-    VectorInt16 aaReal;
-    VectorInt16 aaWorld;
-    VectorFloat gravity;
-    float ypr[3];
-    int16_t mx, my, mz;
 
     mpu.dmpGetQuaternion(&q, fifoBuffer);
     //mpu.dmpGetGyro(gyro, fifoBuffer);
@@ -228,14 +229,12 @@ void GY87::updateBMP(float seaLevelPressure)
     pthread_mutex_lock(&i2cMutex);
     bmp.setControl(BMP085_MODE_TEMPERATURE);
     pthread_mutex_unlock(&i2cMutex);
-
-    bcm2835_delay(5); // wait 5 ms for conversion 
+    gpioDelay(4500); // wait 4.5 ms for conversion 
     pthread_mutex_lock(&i2cMutex);
     temperature = bmp.getTemperatureC();
-    bmp.setControl(BMP085_MODE_PRESSURE_3) ; //taking reading in highest accuracy measurement mode
+    bmp.setControl(BMP085_MODE_PRESSURE_0) ; //taking reading in highest accuracy measurement mode
     pthread_mutex_unlock(&i2cMutex);
-
-    bcm2835_delay(26);
+    gpioDelay(4500);
     pthread_mutex_lock(&i2cMutex);
     pressure = bmp.getPressure();
     pthread_mutex_unlock(&i2cMutex);

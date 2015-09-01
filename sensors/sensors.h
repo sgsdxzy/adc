@@ -6,6 +6,6 @@
 
 #include "GY87.h"
 
-GY87 gy87;
+extern GY87 gy87;
 
 #endif // _SENSORS_H_

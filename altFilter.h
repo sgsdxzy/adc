@@ -12,8 +12,8 @@ class altFilter
 
         float dt = 0.01;
         float altErrorI = 0; // Integrated altitude error
-        std::atomic<float> altitude = 0;
-        std::atomic<float> velocity = 0;
+        std::atomic<float> altitude;
+        std::atomic<float> velocity;
 
         float kp1 = 0.55; // PI observer velocity gain 
         float kp2 = 1.0;  // PI observer position gain
@@ -22,6 +22,6 @@ class altFilter
         float g = 9.80151; // Beijing
 };
 
-altFilter filter;
+extern altFilter filter;
 
 #endif // _ALT_FILTER_H_

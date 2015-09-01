@@ -1,15 +1,17 @@
-#include "sensors/GY87.h"
+#include "sensors/sensors.h"
+#include "altFilter.h"
 #include <stdio.h>
 #include <pigpio.h>
 
-GY87 gy;
+GY87 gy87;
+altFilter filter;
 
 using namespace std;
 void alerter(int gpio, int level, uint32_t tick)
 {
     if (level==1) {
         //pthread_mutex_lock(&i2cmutex);
-        gy.updateMPU();
+        gy87.updateMPU();
         //pthread_mutex_unlock(&i2cmutex);
     }
 }
@@ -17,36 +19,51 @@ void alerter(int gpio, int level, uint32_t tick)
 void updater()
 {
     //pthread_mutex_lock(&i2cmutex);
-    gy.updateBMP();
+    gy87.updateBMP(101500);
     //pthread_mutex_unlock(&i2cmutex);
+}
+
+void filterUpdater()
+{
+    filter.updateAltFilter();
 }
 
 int main()
 {
-    float yaw, pitch, roll, heading, alt;
+    float yaw, pitch, roll, heading, alt, falt;
     I2Cdev::initialize();
     printf("here1\n");
     gpioInitialise();
     printf("here2\n");
-    gy.initialize();
+    gy87.initialize();
     printf("here3\n");
-    gpioSetMode(23, PI_OUTPUT);
-    gpioWrite(23, 0);
-    gpioSetMode(23, PI_INPUT);
+    gpioSetMode(4, PI_OUTPUT);
+    gpioWrite(4, 0);
+    gpioSetMode(4, PI_INPUT);
 
-    gpioSetAlertFunc(23, alerter);
-    gpioSetTimerFunc(0, 100, updater);
+    int az;
+    int i=0;
 
     printf("Waiting...\n");
-    gy.startDMP();
+    gpioSetAlertFunc(4, alerter);
+    gpioSetTimerFunc(0, 10, updater);
+    gy87.startDMP();
     while (true) {
         gpioDelay(100000);
-        yaw=gy.yaw;
-        pitch=gy.pitch;
-        roll=gy.roll;
-        heading=gy.heading/M_PI*180;
-        alt=gy.altitude;
-        printf(" %.2f \t %.2f \t %.2f \t %.0f \t %.1f\r", yaw, pitch, roll, heading, alt);
+        yaw=gy87.yaw;
+        pitch=gy87.pitch;
+        roll=gy87.roll;
+        heading=gy87.heading/M_PI*180;
+        alt=gy87.altitude;
+        az=gy87.azAbsolute;
+        i++;
+        if (i==100) {
+            filter.altitude=alt;
+            filter.velocity=0;
+            gpioSetTimerFunc(1, 10, filterUpdater);
+        }
+        falt=filter.altitude;
+        printf(" %.2f \t %.2f \t %.2f \t %.0f \t %.1f \t %.1f \t %i\n", yaw, pitch, roll, heading, alt, falt, az);
         fflush(stdout);
     }
     printf("Quit\n");
