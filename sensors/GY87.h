@@ -2,6 +2,7 @@
 #define _GY87_H_
 
 #include <atomic>
+#include <pthread.h>
 #include "MPU6050_6Axis_MotionApps20.h"
 #include "HMC5883L.h"
 #include "BMP085.h"
@@ -17,7 +18,7 @@ class GY87 {
         void startDMP();
 
         void updateMPU();
-        void updateBMP();
+        void updateBMP(float seaLevelPressure);
 
         std::atomic<float> yaw, pitch, roll;           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
         std::atomic<float> heading;          // Magnetic heading.
@@ -37,6 +38,8 @@ class GY87 {
         uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
         uint16_t fifoCount;     // count of all bytes currently in FIFO
         uint8_t fifoBuffer[64]; // FIFO storage buffer
+
+        pthread_mutex_t i2cMutex = PTHREAD_MUTEX_INITIALIZER; // Fix the lockup
 };
 
 #endif // _GY87_H_

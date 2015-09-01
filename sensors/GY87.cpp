@@ -78,12 +78,12 @@ void GY87::initialize()
 void GY87::setOffset()
 {
     //Calibrated results
-    mpu.setXAccelOffset(-1556);
-    mpu.setYAccelOffset(3945);
-    mpu.setZAccelOffset(1820);
+    mpu.setXAccelOffset(-1688);
+    mpu.setYAccelOffset(3949);
+    mpu.setZAccelOffset(1845);
     mpu.setXGyroOffset(0);
-    mpu.setYGyroOffset(-6);
-    mpu.setZGyroOffset(108);
+    mpu.setYGyroOffset(-11);
+    mpu.setZGyroOffset(106);
 }
 
 
@@ -170,7 +170,7 @@ void GY87::startDMP()
 void GY87::updateMPU()
 {
     // Making I2C operations thread-safe
-    pthread_mutex_lock(&I2Cdev::i2cMutex);
+    pthread_mutex_lock(&i2cMutex);
     fifoCount = mpu.getFIFOCount();
     if (fifoCount == 1024) {
         // Overflow, reset so we can continue cleanly
@@ -187,7 +187,7 @@ void GY87::updateMPU()
     mx=mpu.getExternalSensorWord(0);
     my=mpu.getExternalSensorWord(2);
     mz=mpu.getExternalSensorWord(4);
-    pthread_mutex_unlock(&I2Cdev::i2cMutex);
+    pthread_mutex_unlock(&i2cMutex);
 
     Quaternion q;
     VectorInt16 aa;
@@ -223,17 +223,22 @@ void GY87::updateMPU()
     azAbsolute = aaWorld.z;
 }
 
-void GY87::updateBMP()
+void GY87::updateBMP(float seaLevelPressure)
 {
-    pthread_mutex_lock(&I2Cdev::i2cMutex);
-
+    pthread_mutex_lock(&i2cMutex);
     bmp.setControl(BMP085_MODE_TEMPERATURE);
+    pthread_mutex_unlock(&i2cMutex);
+
     bcm2835_delay(5); // wait 5 ms for conversion 
+    pthread_mutex_lock(&i2cMutex);
     temperature = bmp.getTemperatureC();
     bmp.setControl(BMP085_MODE_PRESSURE_3) ; //taking reading in highest accuracy measurement mode
-    bcm2835_delay(26);
-    pressure = bmp.getPressure();
-    altitude = bmp.getAltitude(pressure);
+    pthread_mutex_unlock(&i2cMutex);
 
-    pthread_mutex_unlock(&I2Cdev::i2cMutex);
+    bcm2835_delay(26);
+    pthread_mutex_lock(&i2cMutex);
+    pressure = bmp.getPressure();
+    pthread_mutex_unlock(&i2cMutex);
+
+    altitude = bmp.getAltitude(pressure, seaLevelPressure);
 }

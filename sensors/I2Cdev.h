@@ -34,7 +34,6 @@ THE SOFTWARE.
 #include <math.h> // required for BMP180
 #include <stdlib.h> // required for MPU6060
 #include <string.h> // required for MPU6060
-#include <pthread.h>
 
 #define set_I2C_pins  false  
 /* used to boolean for setting RPi I2C pins P1-03 (SDA) and P1-05 (SCL) to alternate function ALT0, which enables those pins for I2C interface. 
@@ -68,8 +67,6 @@ class I2Cdev {
         static bool writeWord(uint8_t devAddr, uint8_t regAddr, uint16_t data);
         static bool writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data);
         static bool writeWords(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint16_t *data);
-
-        pthread_mutex_t i2cMutex = PTHREAD_MUTEX_INITIALIZER;
 };
 
 #endif /* _I2CDEV_H_ */
