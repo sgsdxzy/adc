@@ -38,6 +38,7 @@ class GY87 {
         uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
         uint16_t fifoCount;     // count of all bytes currently in FIFO
         uint8_t fifoBuffer[64]; // FIFO storage buffer
+        uint8_t BMPCounter;     // Only sample temperature at 1Hz
 
         pthread_mutex_t i2cMutex = PTHREAD_MUTEX_INITIALIZER; // Fix the lockup
 };

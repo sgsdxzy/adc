@@ -14,6 +14,7 @@ void GY87::initialize()
     if (mpuStatus != 0) {
         err("MPU6050 DMP setup failed! Code: "+to_string(mpuStatus));
     }
+    BMPCounter = 0;
     packetSize = mpu.dmpGetFIFOPacketSize();
     setOffset();
     // Setting MPU6050 done
@@ -81,7 +82,7 @@ void GY87::setOffset()
     //Calibrated results
     mpu.setXAccelOffset(-1688);
     mpu.setYAccelOffset(3949);
-    mpu.setZAccelOffset(1844);
+    mpu.setZAccelOffset(1845);
     mpu.setXGyroOffset(0);
     mpu.setYGyroOffset(-11);
     mpu.setZGyroOffset(106);
@@ -226,18 +227,26 @@ void GY87::updateMPU()
 
 void GY87::updateBMP(float seaLevelPressure)
 {
-    pthread_mutex_lock(&i2cMutex);
-    bmp.setControl(BMP085_MODE_TEMPERATURE);
-    pthread_mutex_unlock(&i2cMutex);
-    gpioDelay(4500); // wait 4.5 ms for conversion 
-    pthread_mutex_lock(&i2cMutex);
-    temperature = bmp.getTemperatureC();
-    bmp.setControl(BMP085_MODE_PRESSURE_0) ; //taking reading in highest accuracy measurement mode
-    pthread_mutex_unlock(&i2cMutex);
-    gpioDelay(4500);
-    pthread_mutex_lock(&i2cMutex);
-    pressure = bmp.getPressure();
-    pthread_mutex_unlock(&i2cMutex);
+    if (BMPCounter == 0) {
+        pthread_mutex_lock(&i2cMutex);
+        bmp.setControl(BMP085_MODE_TEMPERATURE);
+        pthread_mutex_unlock(&i2cMutex);
+        gpioDelay(4500); // wait 4.5 ms for conversion 
+        pthread_mutex_lock(&i2cMutex);
+        temperature = bmp.getTemperatureC();
+        pthread_mutex_unlock(&i2cMutex);
+    } else {
+        pthread_mutex_lock(&i2cMutex);
+        bmp.setControl(BMP085_MODE_PRESSURE_1) ; //taking reading in highest accuracy measurement mode
+        pthread_mutex_unlock(&i2cMutex);
+        gpioDelay(7500);
+        pthread_mutex_lock(&i2cMutex);
+        pressure = bmp.getPressure();
+        pthread_mutex_unlock(&i2cMutex);
 
-    altitude = bmp.getAltitude(pressure, seaLevelPressure);
+        altitude = bmp.getAltitude(pressure, seaLevelPressure);
+    }
+
+    BMPCounter += 1;
+    BMPCounter = BMPCounter % 100;
 }
