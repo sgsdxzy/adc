@@ -216,6 +216,10 @@ int main(int argc, char** argv)
             break;
         }
 
+        if (command[0] == 'c') {
+            gpioServo(CAMERA_STATION_OUT, std::stof(command.substr(2)));
+            continue;
+        }
         if (command[0] == 'y') {
             pid.target[0] = std::stof(command.substr(2));
             continue;
