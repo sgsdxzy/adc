@@ -80,12 +80,12 @@ void GY87::initialize()
 void GY87::setOffset()
 {
     //Calibrated results
-    mpu.setXAccelOffset(-1688);
-    mpu.setYAccelOffset(3949);
-    mpu.setZAccelOffset(1845);
+    mpu.setXAccelOffset(-1685);
+    mpu.setYAccelOffset(3946);
+    mpu.setZAccelOffset(1838);
     mpu.setXGyroOffset(0);
     mpu.setYGyroOffset(-11);
-    mpu.setZGyroOffset(106);
+    mpu.setZGyroOffset(107);
 }
 
 
