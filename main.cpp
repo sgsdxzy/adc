@@ -11,7 +11,7 @@
 #define ESC_OUT_2 19
 #define ESC_OUT_3 26
 
-#define CAMERA_STATION_OUT //TODO
+#define CAMERA_STATION_OUT 5
 #define PARACHUTE_OUT // No parachute yet
 
 #define GY87_INTERRUPT_GPIO 4
@@ -165,4 +165,76 @@ void cleanup()
     info("Cleaning up...");
     gy87.reset();
     gpioTerminate();
+}
+
+// ----------------------------------------------------------------------------
+// Temporary
+void statusDisplayer()
+{
+    cout << "Yaw: " << gy87.yaw << " ";
+    cout << "Pitch: " << gy87.pitch << " ";
+    cout << "Roll: " << gy87.roll << " ";
+    cout << "Baro: " << gy87.altitude << " ";
+    cout << "Altitdue: " << filter.altitude << " ";
+    cout << "ESC 0: " << pid.esc[0] << " ";
+    cout << "ESC 1: " << pid.esc[1] << " ";
+    cout << "ESC 2: " << pid.esc[2] << " ";
+    cout << "ESC 3: " << pid.esc[3] << " ";
+    cout << endl;
+}
+
+// Main program
+int main(int argc, char** argv)
+{
+    systemInitialize();
+    gpioSetTimerFunc(3, 200, statusDisplayer);
+
+    string command;
+    while (true) {
+        cin >> command;
+        if (command == "con") { 
+            startingConditionInitialize();
+            continue;
+        }
+        if (command == "arm") {
+            arming();
+            continue;
+        }
+        if (command == "start") {
+            startMotor();
+            continue;
+        }
+        if (command == "pid") {
+            pidInitialize();
+            continue;
+        }
+        if (command == "stop") {
+            stopMotor();
+            continue;
+        }
+        if (command == "quit") {
+            break;
+        }
+
+        if (command[0] == 'y') {
+            pid.target[0] = std::stof(command.substr(2));
+            continue;
+        }
+        if (command[0] == 'p') {
+            pid.target[1] = std::stof(command.substr(2));
+            continue;
+        }
+        if (command[0] == 'r') {
+            pid.target[2] = std::stof(command.substr(2));
+            continue;
+        }
+        if (command[0] == 'a') {
+            pid.target[3] = std::stof(command.substr(2));
+            continue;
+        }
+        err("Unknow command: "+command);
+    }
+
+    cleanup();
+    return 0;
 }
