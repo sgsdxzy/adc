@@ -169,6 +169,12 @@ void GY87::startDMP()
     mpu.setDMPEnabled(true);
 }    
 
+void GY87::reset()
+{
+    mpu.reset();
+    gpioDelay(30000);
+}
+
 void GY87::updateMPU()
 {
     Quaternion q;

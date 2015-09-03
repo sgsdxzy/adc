@@ -17,7 +17,7 @@ class altFilter
 
         float kp1 = 0.55; // PI observer velocity gain 
         float kp2 = 1.0;  // PI observer position gain
-        float ki = 0.01; // PI observer integral gain (bias cancellation)
+        float ki = 0.05; // PI observer integral gain (bias cancellation)
 
         float g = 9.80151; // Beijing
 };
