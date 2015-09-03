@@ -39,23 +39,23 @@ void gy87InterruptUpdater(int gpio, int level, uint32_t tick)
 // BMP180 barometer altitude updater, work at 100Hz, Clock 0
 void BMPUpdater()
 {
-    gy87.updateBMP();
+    gy87.updateBMP(101500);
 }
 
 // Altitude complementary filter updater, work at 100Hz, Clock 1
 void altitudeFilterUpdater()
 {
-    filter.update();
+    filter.updateAltFilter();
 }
 
 // Update ESC and motor using values calculated by pid subsystem, work at 100Hz, Clock 2
 void PIDESCUpdater()
 {
     pid.updateESC();
-    gpioPWM(ESC_OUT_0, esc[0]);
-    gpioPWM(ESC_OUT_1, esc[1]);
-    gpioPWM(ESC_OUT_2, esc[2]);
-    gpioPWM(ESC_OUT_3, esc[3]);
+    gpioPWM(ESC_OUT_0, pid.esc[0]);
+    gpioPWM(ESC_OUT_1, pid.esc[1]);
+    gpioPWM(ESC_OUT_2, pid.esc[2]);
+    gpioPWM(ESC_OUT_3, pid.esc[3]);
 }
 
 // ----------------------------------------------------------------------------
@@ -108,10 +108,10 @@ void systemInitialize()
 
     // Set ESC update frequency to 400Hz
     info("Setting PWM frequencies...");
-    gpioSetPWMfrequency(ESC_OUT_0, 400)
-    gpioSetPWMfrequency(ESC_OUT_1, 400)
-    gpioSetPWMfrequency(ESC_OUT_2, 400)
-    gpioSetPWMfrequency(ESC_OUT_3, 400)
+    gpioSetPWMfrequency(ESC_OUT_0, 400);
+    gpioSetPWMfrequency(ESC_OUT_1, 400);
+    gpioSetPWMfrequency(ESC_OUT_2, 400);
+    gpioSetPWMfrequency(ESC_OUT_3, 400);
 
     gpioSetPWMrange(ESC_OUT_0, 2500);
     gpioSetPWMrange(ESC_OUT_1, 2500);
@@ -126,12 +126,12 @@ void systemInitialize()
 // Initialization of altitude filter and starting conditions when GY87's data is stable
 void startingConditionInitialize()
 {
-    info("Recording starting yaw, magnetic heading and altitude...")
+    info("Recording starting yaw, magnetic heading and altitude...");
     startYaw = gy87.yaw;
     startHeading = gy87.heading;
     startAltitude = gy87.altitude;
 
-    info("Starting altitude filter...")
+    info("Starting altitude filter...");
     filter.altitude = startAltitude;
     filter.velocity = 0;
     filter.altErrorI = 0;
@@ -147,7 +147,7 @@ void startingConditionInitialize()
 void pidInitialize()
 {
     info("Initializing PID system...");
-    pid.Initialize();
+    pid.initialize();
 
     //TODO PID tune
 
@@ -169,6 +169,7 @@ void cleanup()
 
 // ----------------------------------------------------------------------------
 // Temporary
+using namespace std;
 void statusDisplayer()
 {
     cout << "Yaw: " << gy87.yaw << " ";
