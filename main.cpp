@@ -218,23 +218,23 @@ int main(int argc, char** argv)
         }
 
         if (command[0] == 'c') {
-            gpioServo(CAMERA_STATION_OUT, std::stof(command.substr(2)));
+            gpioServo(CAMERA_STATION_OUT, std::stoi(command.substr(1)));
             continue;
         }
         if (command[0] == 'y') {
-            pid.target[0] = std::stof(command.substr(2));
+            pid.target[0] = std::stof(command.substr(1));
             continue;
         }
         if (command[0] == 'p') {
-            pid.target[1] = std::stof(command.substr(2));
+            pid.target[1] = std::stof(command.substr(1));
             continue;
         }
         if (command[0] == 'r') {
-            pid.target[2] = std::stof(command.substr(2));
+            pid.target[2] = std::stof(command.substr(1));
             continue;
         }
         if (command[0] == 'a') {
-            pid.target[3] = std::stof(command.substr(2));
+            pid.target[3] = std::stof(command.substr(1));
             continue;
         }
         err("Unknow command: "+command);
