@@ -26,10 +26,10 @@ class PID
 
         // float targetTime = 0; // Time elasped since target set, to dampen D effect
         // uint32_t prevTickTime; // Microsecond time at previous tick, to calculate I. Using system frequency should be enough. 
-        // uint32_t dt; // As system frequency is constant, normalize to 1.
+        uint32_t dt = 10; // in milliseconds
 
         int outMin = 1200;
-        int outMax = 2000;
+        int outMax = 1800;
 };
 
 #endif // _PID_H_
