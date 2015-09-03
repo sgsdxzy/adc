@@ -177,10 +177,10 @@ void statusDisplayer()
     cout << "Roll: " << gy87.roll << " ";
     cout << "Baro: " << gy87.altitude << " ";
     cout << "Altitdue: " << filter.altitude << " ";
-    cout << "ESC 0: " << pid.esc[0] << " ";
-    cout << "ESC 1: " << pid.esc[1] << " ";
-    cout << "ESC 2: " << pid.esc[2] << " ";
-    cout << "ESC 3: " << pid.esc[3] << " ";
+    cout << "ESC 0: " << gpioGetPWMdutycycle(ESC_OUT_0) << " ";
+    cout << "ESC 1: " << gpioGetPWMdutycycle(ESC_OUT_1) << " ";
+    cout << "ESC 2: " << gpioGetPWMdutycycle(ESC_OUT_2) << " ";
+    cout << "ESC 3: " << gpioGetPWMdutycycle(ESC_OUT_3) << " ";
     cout << endl;
 }
 
