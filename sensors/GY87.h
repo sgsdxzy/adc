@@ -16,6 +16,7 @@ class GY87 {
         void setOffset();
         bool testConnection();
         void startDMP();
+        void reset();
 
         void updateMPU();
         void updateBMP(float seaLevelPressure);

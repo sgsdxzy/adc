@@ -9,10 +9,10 @@ PID::PID()
 
 void PID::initialize()
 {
-    target[0] = gy87.yaw;
-    target[1] = gy87.pitch;
-    target[2] = gy87.roll;
-    target[3] = filter.altitude;
+    for (int i=0;i<4;i++) {
+        esc[i] = outMin;
+        errorI[i] = 0;
+    }
 }
 
 void PID::updateESC()
@@ -47,12 +47,12 @@ void PID::updateESC()
     output[2] = rollPID[0]*error[2] + rollPID[1]*errorI[2] - rollPID[2]*errorD[2];
     output[3] = heightPID[0]*error[3] + heightPID[1]*errorI[3] - heightPID[2]*errorD[3];
 
-    int esc[4];
     esc[0] = 1200+output[3] - output[0] + output[1] + output[2];
     esc[1] = 1200+output[3] + output[0] + output[1] - output[2];
     esc[2] = 1200+output[3] - output[0] - output[1] - output[2];
     esc[3] = 1200+output[3] + output[0] - output[1] + output[2];
 
+    // Limit to range
     int min,max;
     int diff;
     max = *std::max_element(esc, esc+4);
@@ -67,7 +67,6 @@ void PID::updateESC()
                 esc[i] = outMin;
             }
         }
-        // TODO
         return;
     }
     if (min < outMin) {
@@ -82,7 +81,4 @@ void PID::updateESC()
         }
         return;
     }
-
-
-    // Limit to range
 }

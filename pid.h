@@ -14,6 +14,8 @@ class PID
         // void newTarget(float yaw, float pitch, float roll, float height);
         void updateESC();
 
+        int esc[4] = {0, 0, 0, 0}; // Output
+
         float yawPID[3] = {0, 0, 0}; // [Kp, Ki, Kd]
         float pitchPID[3] = {0, 0, 0};
         float rollPID[3] = {0, 0, 0};
