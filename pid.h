@@ -32,6 +32,11 @@ class PID
 
         int outMin = 1200;
         int outMax = 1800;
+
+        float errorIMax[4];
+        float errorIMin[4];
+        int singleIMax = 200; // Maximum allowed I value on single axis
+        int heightIMax = 500; // Maximum allowed I value on height
 };
 
 #endif // _PID_H_
