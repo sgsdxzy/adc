@@ -47,10 +47,10 @@ void PID::updateESC()
     output[2] = rollPID[0]*error[2] + rollPID[1]*errorI[2] - rollPID[2]*errorD[2];
     output[3] = heightPID[0]*error[3] + heightPID[1]*errorI[3] - heightPID[2]*errorD[3];
 
-    esc[0] = 1200+output[3] - output[0] + output[1] + output[2];
-    esc[1] = 1200+output[3] + output[0] + output[1] - output[2];
-    esc[2] = 1200+output[3] - output[0] - output[1] - output[2];
-    esc[3] = 1200+output[3] + output[0] - output[1] + output[2];
+    esc[0] = 1200+output[3] - output[0] - output[1] + output[2];
+    esc[1] = 1200+output[3] + output[0] + output[1] + output[2];
+    esc[2] = 1200+output[3] - output[0] + output[1] - output[2];
+    esc[3] = 1200+output[3] + output[0] - output[1] - output[2];
 
     // Limit to range
     int min,max;
