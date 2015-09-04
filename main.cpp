@@ -149,7 +149,22 @@ void pidInitialize()
     info("Initializing PID system...");
     pid.initialize();
 
-    //TODO PID tune
+    //PID tune
+    pid.yawPID[0] = 50;
+    pid.yawPID[1] = 10;
+    pid.yawPID[2] = 0.03;
+
+    pid.pitchPID[0] = 50;
+    pid.pitchPID[1] = 10;
+    pid.pitchPID[2] = 0.02;
+
+    pid.rollPID[0] = 50;
+    pid.rollPID[1] = 10;
+    pid.rollPID[2] = 0.02;
+
+    pid.heightPID[0] = 10;
+    pid.heightPID[1] = 50;
+    pid.heightPID[2] = 50;
 
     // Recording starting attitude, in case ground is not level
     pid.target[0] = gy87.yaw;

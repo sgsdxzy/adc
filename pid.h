@@ -28,7 +28,7 @@ class PID
 
         // float targetTime = 0; // Time elasped since target set, to dampen D effect
         // uint32_t prevTickTime; // Microsecond time at previous tick, to calculate I. Using system frequency should be enough. 
-        uint32_t dt = 10; // in milliseconds
+        float dt = 0.01; // in seconds
 
         int outMin = 1200;
         int outMax = 1800;
