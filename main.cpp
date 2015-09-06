@@ -1,30 +1,25 @@
 // ----------------------------------------------------------------------------
 #include <pigpio.h>
-#include "sensors/sensors.h"
+#include "status.h"
+#include "config.h"
 #include "altFilter.h"
 #include "pid.h"
 #include "debug.h"
 
 // GPIOs
-#define ESC_OUT_0 6
-#define ESC_OUT_1 13
-#define ESC_OUT_2 19
-#define ESC_OUT_3 26
-
 #define CAMERA_STATION_OUT 5
 #define PARACHUTE_OUT // No parachute yet
 
 #define GY87_INTERRUPT_GPIO 4
 
 // Global variables to be shared in threads
+statusContainer status;
+configuration config;
+ESCController escControl;
+
 GY87 gy87;
 altFilter filter;
 PID pid;
-
-// Starting conditions
-float startYaw;
-float startHeading;
-float startAltitude;
 
 // ----------------------------------------------------------------------------
 // Callbacks
@@ -33,19 +28,41 @@ void gy87InterruptUpdater(int gpio, int level, uint32_t tick)
 {
     if (level==1) {
         gy87.updateMPU();
+
+        //Atomic value assign
+        for (int i=0;i<3;i++) {
+            status.attitude[i] = gy87.ypr[i]; // rad
+        }
+        status.heading = gy87.mh; // rad
+        status.gyroscope[0]   = (float)gy87.gyro.x/32768*1000*M_PI/180; // rad/s
+        status.gyroscope[1]   = (float)gy87.gyro.y/32768*1000*M_PI/180;
+        status.gyroscope[2]   = (float)gy87.gyro.z/32768*1000*M_PI/180;
+        status.accRelative[0] = (float)gy87.aaReal.x/8192*config.g; // m/s^2
+        status.accRelative[1] = (float)gy87.aaReal.y/8192*config.g;
+        status.accRelative[2] = (float)gy87.aaReal.z/8192*config.g;
+        status.accAbsolute[0] = (float)gy87.aaWorld.x/8192*config.g;
+        status.accAbsolute[1] = (float)gy87.aaWorld.y/8192*config.g;
+        status.accAbsolute[2] = (float)gy87.aaWorld.z/8192*config.g;
     }
 }
 
 // BMP180 barometer altitude updater, work at 100Hz, Clock 0
 void BMPUpdater()
 {
-    gy87.updateBMP(101500);
+    gy87.updateBMP(config.seaLevelPressure);
+
+    status.temperature = gy87.temperature; // C
+    status.pressure = gy87.pressure; // Pa
+    status.baroAltitude = gy87.baroAltitude; // m
 }
 
 // Altitude complementary filter updater, work at 100Hz, Clock 1
 void altitudeFilterUpdater()
 {
-    filter.updateAltFilter();
+    filter.updateAltFilter(status.baroAltitude, status.accAbsolute[2], config.dt);
+
+    status.filterAltitude = filter.filterAltitude;
+    status.filterVelocityZ = filter.filterVelocityZ;
 }
 
 // Update ESC and motor using values calculated by pid subsystem, work at 100Hz, Clock 2
@@ -60,87 +77,51 @@ void PIDESCUpdater()
 
 // ----------------------------------------------------------------------------
 // Routines
-// Motor control routines
-void arming()
-{
-    info("Arming...");
-    gpioPWM(ESC_OUT_0, 1000);
-    gpioPWM(ESC_OUT_1, 1000);
-    gpioPWM(ESC_OUT_2, 1000);
-    gpioPWM(ESC_OUT_3, 1000);
-}
-
-void startMotor()
-{
-    info("Starting Motors...");
-    gpioPWM(ESC_OUT_0, 1200);
-    gpioPWM(ESC_OUT_1, 1200);
-    gpioPWM(ESC_OUT_2, 1200);
-    gpioPWM(ESC_OUT_3, 1200);
-}
-    
-void stopMotor()
-{
-    info("Stopping PID...");
-    gpioSetTimerFunc(2, 10, NULL);
-
-    info("Stopping Motors...");
-    gpioPWM(ESC_OUT_0, 1000);
-    gpioPWM(ESC_OUT_1, 1000);
-    gpioPWM(ESC_OUT_2, 1000);
-    gpioPWM(ESC_OUT_3, 1000);
-}
-
 // Initialize all sensors and motors
 void systemInitialize()
 {
     // Initialize sensors
-    info("Initializing sensors...");
+    info("Initializing system...");
     I2Cdev::initialize();
     gpioInitialise();
-    gy87.initialize();
 
-    // Start gathering data
-    info("Starting GY87 data gathering...");
-    gpioSetAlertFunc(GY87_INTERRUPT_GPIO, gy87InterruptUpdater);
-    gpioSetTimerFunc(0, 10, BMPUpdater);
-    gy87.startDMP();
-
-    // Set ESC update frequency to 400Hz
-    info("Setting PWM frequencies...");
-    gpioSetPWMfrequency(ESC_OUT_0, 400);
-    gpioSetPWMfrequency(ESC_OUT_1, 400);
-    gpioSetPWMfrequency(ESC_OUT_2, 400);
-    gpioSetPWMfrequency(ESC_OUT_3, 400);
-
-    gpioSetPWMrange(ESC_OUT_0, 2500);
-    gpioSetPWMrange(ESC_OUT_1, 2500);
-    gpioSetPWMrange(ESC_OUT_2, 2500);
-    gpioSetPWMrange(ESC_OUT_3, 2500);
+    // Initialize ESC controller
+    info("Initializing ESC controller...");
+    escControl.initialize(config.controlled_esc, config.ESCFrequency, config.outMin, config.outMax);
 
     // Centering camera station
     info("Centering camera station...");
     gpioServo(CAMERA_STATION_OUT, 1500);
-}
 
-// Initialization of altitude filter and starting conditions when GY87's data is stable
-void startingConditionInitialize()
-{
-    info("Recording starting yaw, magnetic heading and altitude...");
-    startYaw = gy87.yaw;
-    startHeading = gy87.heading;
-    startAltitude = gy87.altitude;
+    // Start GY87
+    info("Initializing GY87 10-DOF IMU...")
+    gy87.initialize();
+    gy87.setOffset(config.gy87Offset);
+    info("Starting GY87 data gathering...");
+    gpioSetAlertFunc(GY87_INTERRUPT_GPIO, gy87InterruptUpdater);
+    gy87.startDMP();
+    gpioSetTimerFunc(0, 10, BMPUpdater);
+
+    // Wait 10s
+    info("Waiting for DMP data to stablize...");
+    gpioSleep(PI_TIME_RELATIVE, 10, 0);
+
+    // Initialization of altitude filter and starting conditions when GY87's data is stable
+    info("Recording starting yaw and magnetic heading...");
+    for (int i=0;i<3;i++) {
+        status.startAttitude[i] = status.attitude[i];
+    }
+    status.startHeading = status.heading;
+    status.startAltitude = status.baroAltitude;
 
     info("Starting altitude filter...");
-    filter.altitude = startAltitude;
-    filter.velocity = 0;
-    filter.altErrorI = 0;
+    filter.initialize(status.startAltitude, config.k);
     gpioSetTimerFunc(1, 10, altitudeFilterUpdater);
 
-    // Wait for 2 seconds
-    gpioSleep(PI_TIME_RELATIVE, 2, 0);
+    // Wait for 1 seconds
+    gpioSleep(PI_TIME_RELATIVE, 1, 0);
     info("Getting starting altitude from altitude filter reading...");
-    startAltitude = filter.altitude;
+    status.startAltitude = status.filterAltitude;
     info("Altitude = "+to_string(startAltitude));
 }
 
@@ -167,10 +148,10 @@ void pidInitialize()
 
     pid.initialize();
     // Recording starting attitude, in case ground is not level
-    pid.target[0] = gy87.yaw;
-    pid.target[1] = gy87.pitch;
-    pid.target[2] = gy87.roll;
-    pid.target[3] = filter.altitude;
+    for (int i=0;i<3;i++) {
+        pid.target[i] = status.startAttitude[i];
+    }
+    pid.target[3] = status.startAltitude;
 
     gpioSetTimerFunc(2, 10, PIDESCUpdater);
 }
@@ -187,11 +168,11 @@ void cleanup()
 using namespace std;
 void statusDisplayer()
 {
-    cout << "Yaw: " << gy87.yaw << " ";
-    cout << "Pitch: " << gy87.pitch << " ";
-    cout << "Roll: " << gy87.roll << " ";
-    cout << "Baro: " << gy87.altitude << " ";
-    cout << "Altitdue: " << filter.altitude << " ";
+    cout << "Yaw: " << status.attitude[0] << " ";
+    cout << "Pitch: " << status.attitude[1] << " ";
+    cout << "Roll: " << status.attitude[2] << " ";
+    cout << "Baro: " << status.baroAltitude << " ";
+    cout << "Altitdue: " << status.filterAltitude << " ";
     cout << "ESC 0: " << gpioGetPWMdutycycle(ESC_OUT_0) << " ";
     cout << "ESC 1: " << gpioGetPWMdutycycle(ESC_OUT_1) << " ";
     cout << "ESC 2: " << gpioGetPWMdutycycle(ESC_OUT_2) << " ";

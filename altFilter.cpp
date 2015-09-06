@@ -1,13 +1,23 @@
 #include "altFilter.h"
 
-void altFilter::updateAltFilter()
+void altFilter::initialize(float startAltitude, float k[3])
 {
-    float altError = gy87.altitude - altitude;
-    altErrorI += altError*dt;
+    filterAltitude = startAltitude;
+    filterVelocityZ = 0;
+    altErrorI = 0;
+    kp1 = k[0];
+    kp2 = k[1];
+    ki = k[2];
+}
 
-    float compAcc = gy87.azAbsolute/8192.0*g + altErrorI*ki; // m/s^2
+void altFilter::updateAltFilter(float altitude, float acceleration, float dt);
+{
+    float altError = altitude - filterAltitude;
+    altErrorI += altError * dt;
 
-    float delta = (compAcc + kp1*altError)*dt;
-    altitude = altitude + (velocity*2 + delta)*dt/2 + altError*kp2*dt;
-    velocity = velocity + delta;
+    float compAcc = acceleration + altErrorI * ki;
+
+    float delta = (compAcc + kp1 * altError) * dt;
+    filterAltitude += (filterVelocityZ*2 + delta) * dt/2 + altError * kp2 * dt;
+    filterVelocityZ += delta;
 }

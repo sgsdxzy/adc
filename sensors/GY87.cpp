@@ -1,5 +1,3 @@
-#include <pigpio.h>
-#include "../debug.h"
 #include "GY87.h"
 
 void GY87::initialize()
@@ -14,9 +12,7 @@ void GY87::initialize()
     if (mpuStatus != 0) {
         err("MPU6050 DMP setup failed! Code: "+to_string(mpuStatus));
     }
-    BMPCounter = 0;
     packetSize = mpu.dmpGetFIFOPacketSize();
-    setOffset();
     // Setting MPU6050 done
 
     // Setting HMC5883L
@@ -69,7 +65,7 @@ void GY87::initialize()
     mpu.setSlaveDelayEnabled(1, true);
     mpu.setSlaveDelayEnabled(2, true);
 
-    //BMP085
+    //BMP180
     if (!bmp.testConnection()) {
         // Test failed
         err("BMP180 test connection failed!");
@@ -77,86 +73,15 @@ void GY87::initialize()
     bmp.initialize();
 }
 
-void GY87::setOffset()
+void GY87::setOffset(int16_t gy87Offset[6])
 {
     //Calibrated results
-    mpu.setXAccelOffset(-1685);
-    mpu.setYAccelOffset(3946);
-    mpu.setZAccelOffset(1838);
-    mpu.setXGyroOffset(0);
-    mpu.setYGyroOffset(-11);
-    mpu.setZGyroOffset(107);
-}
-
-
-void GY87::calibrate(int samples, int tolerance)
-{
-    int xa;
-    int ya;
-    int za;
-    int xg;
-    int yg;
-    int zg;
-
-    int scale;
-
-    scale = mpu.getFullScaleAccelRange();
-    int accRange = pow(2, scale);
-    scale = mpu.getFullScaleGyroRange();
-    int gyroRange = pow(2, scale);
-
-    int g = 16384/accRange; //How much is 1g
-
-    int i;
-    int xaa, yaa, zaa, xga, yga, zga;
-    int16_t ax, ay, az;
-    int16_t gx, gy, gz;
-    int error=32767;
-
-
-    while (error > tolerance) {
-        xa = mpu.getXAccelOffset();
-        ya = mpu.getYAccelOffset();
-        za = mpu.getZAccelOffset();
-        xg = mpu.getXGyroOffset();
-        yg = mpu.getYGyroOffset();
-        zg = mpu.getZGyroOffset();
-        xaa=0, yaa=0, zaa=0, xga=0, yga=0, zga=0;
-        for (i=0;i<samples;i++) {
-            mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-            xaa += ax;
-            yaa += ay;
-            zaa += az;
-            xga += gx;
-            yga += gy;
-            zga += gz;
-            bcm2835_delay(10);
-        }
-
-        xaa /= samples;
-        yaa /= samples;
-        zaa /= samples;
-        xga /= samples;
-        yga /= samples;
-        zga /= samples;
-
-        mpu.setXAccelOffset(xa-xaa/8*accRange);
-        mpu.setYAccelOffset(ya-yaa/8*accRange);
-        mpu.setZAccelOffset(za+(g-zaa)/8*accRange);
-        mpu.setXGyroOffset(xg-xga/8*gyroRange);
-        mpu.setYGyroOffset(yg-yga/8*gyroRange);
-        mpu.setZGyroOffset(zg-zga/8*gyroRange);
-
-        error = abs(xaa);
-        if (error < abs(yaa)) error = abs(yaa);
-        if (error < abs(-g-zaa)) error = abs(-g-zaa);
-        if (error < abs(xga)) error = abs(xga);
-        if (error < abs(yga)) error = abs(yga);
-        if (error < abs(zga)) error = abs(zga);
-        info("Calibrated result:"+to_string(error));
-    }
-
-    info("Calibration finished!");
+    mpu.setXAccelOffset(gy87Offset[0]);
+    mpu.setYAccelOffset(gy87Offset[1]);
+    mpu.setZAccelOffset(gy87Offset[2]);
+    mpu.setXGyroOffset(gy87Offset[3]);
+    mpu.setYGyroOffset(gy87Offset[4]);
+    mpu.setZGyroOffset(gy87Offset[5]);
 }
 
 bool GY87::testConnection()
@@ -177,15 +102,6 @@ void GY87::reset()
 
 void GY87::updateMPU()
 {
-    Quaternion q;
-    VectorInt16 aa;
-    VectorInt16 aaReal;
-    VectorInt16 aaWorld;
-    VectorInt16 gyro;
-    VectorFloat gravity;
-    float ypr[3];
-    int16_t mx, my, mz;
-
     // Making I2C operations thread-safe
     pthread_mutex_lock(&i2cMutex);
     fifoCount = mpu.getFIFOCount();
@@ -216,23 +132,8 @@ void GY87::updateMPU()
 
     float xh = mx*cos(ypr[1])+my*sin(ypr[1])*sin(ypr[2])+mz*sin(ypr[1])*cos(ypr[2]);
     float yh = my*cos(ypr[2])+mz*sin(ypr[2]);
-    float mh = atan2(-yh, xh);
-    if(mh < 0) mh += 2 * M_PI;
-
-    //Atomic value assign
-    yaw = ypr[0];
-    pitch = ypr[1];
-    roll = ypr[2];
-    heading = mh;
-    gx = gyro.x;
-    gy = gyro.y;
-    gz = gyro.z;
-    axRelative = aaReal.x;
-    ayRelative = aaReal.y;
-    azRelative = aaReal.z;
-    axAbsolute = aaWorld.x;
-    ayAbsolute = aaWorld.y;
-    azAbsolute = aaWorld.z;
+    mh = atan2(-yh, xh);
+    if (mh < 0) mh += 2*M_PI;
 }
 
 void GY87::updateBMP(float seaLevelPressure)
@@ -254,7 +155,7 @@ void GY87::updateBMP(float seaLevelPressure)
         pressure = bmp.getPressure();
         pthread_mutex_unlock(&i2cMutex);
 
-        altitude = bmp.getAltitude(pressure, seaLevelPressure);
+        baroAltitude = bmp.getAltitude(pressure, seaLevelPressure);
     }
 
     BMPCounter += 1;

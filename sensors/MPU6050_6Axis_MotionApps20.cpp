@@ -88,8 +88,8 @@ uint8_t MPU6050::dmpInitialize() {
 
             setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
 
-            DEBUG_PRINTLN(F("Setting gyro sensitivity to +/- 2000 deg/sec..."));
-            setFullScaleGyroRange(MPU6050_GYRO_FS_2000);
+            DEBUG_PRINTLN(F("Setting gyro sensitivity to +/- 1000 deg/sec..."));
+            setFullScaleGyroRange(MPU6050_GYRO_FS_1000);
 
             DEBUG_PRINTLN(F("Setting DMP configuration bytes (function unknown)..."));
             setDMPConfig1(0x03);

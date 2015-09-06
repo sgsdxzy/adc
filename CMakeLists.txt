@@ -4,7 +4,7 @@ project (adc)
 list( APPEND CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}" )
 
 include_directories(sensors)
-file(GLOB SOURCES "sensors/*.cpp")
+file(GLOB_RECURSE SOURCES "*.cpp")
  
-add_executable(adc main.cpp pid.cpp debug.cpp altFilter.cpp ${SOURCES})
+add_executable(adc ${SOURCES})
 target_link_libraries(adc bcm2835 pigpio pthread)
