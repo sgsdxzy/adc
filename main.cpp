@@ -132,6 +132,12 @@ void systemInitialize()
     // Centering camera station
     info("Centering camera station...");
     gpioServo(CAMERA_STATION_OUT, 1500);
+}
+
+void initialize()
+{
+    // Power sonar up
+    gpioWrite(HCSR04_VCC, 1);
 
     // Start GY87
     info("Initializing GY87 10-DOF IMU...");
@@ -162,9 +168,12 @@ void systemInitialize()
     info("Initializing PID system...");
     pids.initialize(config.ratePIDSystemConfig, config.attitudePIDSystemConfig, config.ZPIDSystemConfig);
     pids.setAttitudeTargets(status.startAttitude);
-    pids.setVzTarget(0, ALTITUDE_BARO);
+    pids.setVzTarget(0.028, ALTITUDE_BARO);
 
     info("Starting updater thread...");
+    gpioSetMode(HCSR04_ECHO, 0);
+    gpioSetMode(HCSR04_TRIG, 1);
+    gpioSetAlertFunc(HCSR04_ECHO, getEcho);
     gpioSetTimerFunc(0, 10, updater);
 
     // Wait for 2 seconds
@@ -189,14 +198,16 @@ void statusDisplayer()
     cout << "Y: " << status.attitude[0] << " ";
     cout << "P: " << status.attitude[1] << " ";
     cout << "R: " << status.attitude[2] << " ";
+    cout << "ZA: " << status.accAbsolute[2] << " ";
     //cout << "Baro: " << status.baroAltitude << " ";
     //cout << "Sonar: " << status.sonarAltitude << " ";
-    cout << "BA: " << status.baroFilterAltitude << " ";
-    cout << "SA: " << status.sonarFilterAltitude << " ";
-    cout << "E0: " << gpioGetPWMdutycycle(config.controlled_esc[0]) << " ";
-    cout << "E1: " << gpioGetPWMdutycycle(config.controlled_esc[1]) << " ";
-    cout << "E2: " << gpioGetPWMdutycycle(config.controlled_esc[2]) << " ";
-    cout << "E3: " << gpioGetPWMdutycycle(config.controlled_esc[3]) << " ";
+    cout << "BA: " << status.baroAltitude << " ";
+    cout << "SA: " << status.sonarAltitude << " ";
+    cout << "SF: " << status.sonarFilterAltitude << " ";
+    //cout << "E0: " << gpioGetPWMdutycycle(config.controlled_esc[0]) << " ";
+    //cout << "E1: " << gpioGetPWMdutycycle(config.controlled_esc[1]) << " ";
+    //cout << "E2: " << gpioGetPWMdutycycle(config.controlled_esc[2]) << " ";
+    //cout << "E3: " << gpioGetPWMdutycycle(config.controlled_esc[3]) << " ";
     cout << endl;
 }
 
@@ -218,7 +229,7 @@ int main(int argc, char** argv)
             continue;
         }
         if (command == "init") {
-            systemInitialize();
+            initialize();
             continue;
         }
         if (command == "stop") {
