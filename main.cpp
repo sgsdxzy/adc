@@ -7,7 +7,7 @@
 #include "debug.h"
 
 // GPIOs
-#define CAMERA_STATION_OUT 5
+#define CAMERA_STATION_OUT 18
 #define PARACHUTE_OUT // No parachute yet
 
 #define GY87_INTERRUPT_GPIO 4
@@ -87,7 +87,7 @@ void systemInitialize()
 
     // Initialize ESC controller
     info("Initializing ESC controller...");
-    escControl.initialize(config.controlled_esc, config.ESCFrequency, config.outMin, config.outMax);
+    escControl.initialize(config.controlled_esc, config.ESCFrequency, config.ESCOutMin, config.ESCOutMax);
 
     // Centering camera station
     info("Centering camera station...");

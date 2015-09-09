@@ -18,9 +18,13 @@ class statusContainer
         // HC-SR04+
         std::atomic<float> sonarAltitude;
 
-        // Altitude filter
-        std::atomic<float> filterAltitude;
-        std::atomic<float> filterVelocityZ;
+        // Baro filter
+        std::atomic<float> baroFilterAltitude;
+        std::atomic<float> baroFilterVelocityZ;
+
+        // Sonar filter 
+        std::atomic<float> sonarFilterAltitude;
+        std::atomic<float> sonarFilterVelocityZ;
 
         // Optical flow
         std::atomic<float> opticalVelocity[2]; // [vx, vy]

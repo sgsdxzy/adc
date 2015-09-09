@@ -1,6 +1,7 @@
 #ifndef _ESC_CONTROLLER_H_
 #define _ESC_CONTROLLER_H_ 
 
+#include <algorithm>
 #include <pigpio.h>
 
 class ESCController
@@ -11,7 +12,7 @@ class ESCController
         void arming();
         void startMotor();
         void stopMotor();
-        void TYPROutput(int throttle, int yaw, int pitch, int roll); // Auto limit into range
+        void YPRT(int yprt[4]); // [yaw, pitch, roll, throttle], auto limit into range
 
         int ESC[4]; // Controlled ESCs
         int outMin;

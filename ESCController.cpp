@@ -33,14 +33,14 @@ void ESCController::stopMotor()
     allSetTo(1000);
 }
 
-void ESCController::TYPROutput(int throttle, int yaw, int pitch, int roll)
+void ESCController::YPRT(int yprt[4])
 {
     int i;
     int ESCOutput[4];
-    ESCOutput[0] = outMin+throttle - yaw - pitch + roll;
-    ESCOutput[1] = outMin+throttle + yaw + pitch + roll;
-    ESCOutput[2] = outMin+throttle - yaw + pitch - roll;
-    ESCOutput[3] = outMin+throttle + yaw - pitch - roll;
+    ESCOutput[0] = outMin+yprt[3] - yprt[0] - yprt[1] + yprt[2];
+    ESCOutput[1] = outMin+yprt[3] + yprt[0] + yprt[1] + yprt[2];
+    ESCOutput[2] = outMin+yprt[3] - yprt[0] + yprt[1] - yprt[2];
+    ESCOutput[3] = outMin+yprt[3] + yprt[0] - yprt[1] - yprt[2];
 
     // Limit to range
     int min,max;

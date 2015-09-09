@@ -1,42 +1,59 @@
 #ifndef _PID_H_
 #define _PID_H_
 
-#include <pigpio.h>
-#include "sensors/sensors.h"
-#include "altFilter.h"
+#include <atomic>
+#include "status.h"
+#include "debug.h"
 
-// All-in-one 4 axis PID
+#define PID_RATE 0
+#define PID_ATTITUDE 1
+
+#define ALTITUDE_BARO 0
+#define ALTITUDE_SONAR 1
+
+// 1 axis PID
 class PID
 {
     public:
-        PID();
-        void initialize();
-        // void newTarget(float yaw, float pitch, float roll, float height);
-        void updateESC();
+        void initialize(float pidConfig[7]); // [Kp, Ki, Kd, errorIMax, errorIMin, outMax, outMin]
+        float update(float error, float errorD, float dt); // Get PID result by providing errorD
+        //float update(float error, float dt); // Get PID result by internal errorD calculation
 
-        int esc[4] = {0, 0, 0, 0}; // Output
+        float pid[3]; // [Kp, Ki, Kd]
+        float errorI = 0;
+        //float prevError = 0;
+        float errorIMax, errorIMin;
+        float outMax, outMin;
+};
 
-        float yawPID[3] = {0, 0, 0}; // [Kp, Ki, Kd]
-        float pitchPID[3] = {0, 0, 0};
-        float rollPID[3] = {0, 0, 0};
-        float heightPID[3] = {0, 0, 0};
+class PIDSystem
+{
+    public:
+        void initialize(float ratePIDSystemConfig[3][7], float attitudePIDSystemConfig[3][7], float ZPIDSystemConfig[4][7]);
+        void setRateTarget(int index, float target); // Setting ratePID[index]'s target
+        void setRateTargets(float targets[3]); // Setting ratePIDs' target
+        void setAttitudeTarget(int index, float target); // Setting attitudePID[index]'s target
+        void setAttitudeTargets(float targets[3]); // Setting attitudePIDs' target
+        void setVzTarget(float target, uint8_t type);
+        void setAltitudeTarget(float target, uint8_t type);
+        void update(statusContainer& status, float dt); // Update the whole PID system to get yprt results
 
-        float target[4] = {0, 0, 0, 0}; // [yaw, pitch, roll, height]
-        float errorI[4] = {0, 0, 0, 0}; // I part;
-        // float prevTarget[4] = {0, 0, 0, 0};
-        // float prevPosition[4] = {0, 0, 0, 0}; // Used to calculate D part. Using gyro data instead
+        PID ratePID[3]; // [-gz, -gy, gx]
+        PID attitudePID[3]; // [yaw, pitch, roll]
+        PID VzPID[2]; // [baro, sonar]
+        PID altitudePID[2];
+        // PID velocityPID[2]; // [vx,vy]
 
-        // float targetTime = 0; // Time elasped since target set, to dampen D effect
-        // uint32_t prevTickTime; // Microsecond time at previous tick, to calculate I. Using system frequency should be enough. 
-        float dt = 0.01; // in seconds
+        std::atomic<float> rateTargets[3];
+        std::atomic<float> attitudeTargets[3];
+        std::atomic<float> VzTarget; 
+        std::atomic<float> altitudeTarget[2]; // [baro, sonar]
 
-        int outMin = 1200;
-        int outMax = 1800;
+        std::atomic<uint8_t> PIDTypes[3] = {PID_ATTITUDE, PID_ATTITUDE, PID_ATTITUDE}; // What enabled PID is controlling YPR
+        std::atomic<uint8_t> altPIDType = PID_ATTITUDE;
+        std::atomic<uint8_t> altitudeType = ALTITUDE_BARO;
 
-        float errorIMax[4];
-        float errorIMin[4];
-        int singleIMax = 200; // Maximum allowed I value on single axis
-        int heightIMax = 500; // Maximum allowed I value on height
+        int yprt[4]; // The final result
 };
 
 #endif // _PID_H_
