@@ -18,8 +18,8 @@ class GY87 {
         void startDMP();
         void reset();
 
-        void updateMPU()
-        void updateBMP(float seaLevelPressure)
+        void updateMPU();
+        void updateBMP(float seaLevelPressure);
 
         // MPU6050
         Quaternion q;

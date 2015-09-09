@@ -10,7 +10,7 @@ void altFilter::initialize(float startAltitude, float k[3])
     ki = k[2];
 }
 
-void altFilter::updateAltFilter(float altitude, float acceleration, float dt);
+void altFilter::updateAltFilter(float altitude, float acceleration, float dt)
 {
     float altError = altitude - filterAltitude;
     altErrorI += altError * dt;

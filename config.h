@@ -36,7 +36,7 @@ class configuration
 
             {20, 20, 20, 25, 0, 600, 0}, 
             {20, 20, 20, 25, 0, 600, 0}, 
-        }
+        };
 };
 
 #endif // _CONFIG_ADC_

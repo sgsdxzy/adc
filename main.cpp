@@ -2,7 +2,9 @@
 #include <pigpio.h>
 #include "status.h"
 #include "config.h"
+#include "sensors/GY87.h"
 #include "altFilter.h"
+#include "ESCController.h"
 #include "pid.h"
 #include "debug.h"
 
@@ -132,7 +134,7 @@ void systemInitialize()
     gpioServo(CAMERA_STATION_OUT, 1500);
 
     // Start GY87
-    info("Initializing GY87 10-DOF IMU...")
+    info("Initializing GY87 10-DOF IMU...");
     gy87.initialize();
     gy87.setOffset(config.gy87Offset);
     info("Starting GY87 data gathering...");
@@ -152,14 +154,14 @@ void systemInitialize()
 
     info("Initializing altitude filters...");
     // Run twice to get temperature and altitude
-    gy87.updateBMP();
-    gy87.updateBMP();
+    gy87.updateBMP(config.seaLevelPressure);
+    gy87.updateBMP(config.seaLevelPressure);
     baroFilter.initialize(gy87.baroAltitude, config.k);
     sonarFilter.initialize(0, config.k);
 
     info("Initializing PID system...");
     pids.initialize(config.ratePIDSystemConfig, config.attitudePIDSystemConfig, config.ZPIDSystemConfig);
-    pids.setAttitudeTargets(config.startAttitude);
+    pids.setAttitudeTargets(status.startAttitude);
     pids.setVzTarget(0, ALTITUDE_BARO);
 
     info("Starting updater thread...");
@@ -169,7 +171,7 @@ void systemInitialize()
     gpioSleep(PI_TIME_RELATIVE, 2, 0);
     info("Getting starting altitude from altitude filter reading...");
     status.startAltitude = status.baroFilterAltitude;
-    info("Altitude = "+to_string(startAltitude));
+    info("Altitude = "+to_string(status.startAltitude));
 }
 
 void cleanup()

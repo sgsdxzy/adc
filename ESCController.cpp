@@ -5,7 +5,7 @@ void ESCController::initialize(int controlled_esc[4], int frequency, int min, in
     for (int i=0;i<4;i++) {
         ESC[i] = controlled_esc[i];
         gpioSetPWMfrequency(ESC[i], frequency);
-        gpioSetPWMrange(ESC[i], 1000000/frequency)
+        gpioSetPWMrange(ESC[i], 1000000/frequency);
     }
     outMin = min;
     outMax = max;

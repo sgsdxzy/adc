@@ -50,9 +50,9 @@ class PIDSystem
         std::atomic<float> VzTarget; 
         std::atomic<float> altitudeTarget[2]; // [baro, sonar]
 
-        std::atomic<uint8_t> PIDTypes[3] = {PID_ATTITUDE, PID_ATTITUDE, PID_ATTITUDE}; // What enabled PID is controlling YPR
-        std::atomic<uint8_t> altPIDType = PID_ATTITUDE;
-        std::atomic<uint8_t> altitudeType = ALTITUDE_BARO;
+        std::atomic<uint8_t> PIDTypes[3]; // What enabled PID is controlling YPR
+        std::atomic<uint8_t> altPIDType; // PID_RATE or PID_ATTITUDE
+        std::atomic<uint8_t> altitudeType; // ALTITUDE_BARO or ALTITUDE_SONAR
 
         int yprt[4]; // The final result
 };
