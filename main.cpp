@@ -8,9 +8,12 @@
 
 // GPIOs
 #define CAMERA_STATION_OUT 18
-#define PARACHUTE_OUT // No parachute yet
+// #define PARACHUTE_OUT // No parachute yet
 
 #define GY87_INTERRUPT_GPIO 4
+#define HCSR04_TRIG 20
+#define HCSR04_ECHO 16
+#define HCSR04_VCC 21
 
 // Global variables to be shared in threads
 statusContainer status;
@@ -18,8 +21,16 @@ configuration config;
 ESCController escControl;
 
 GY87 gy87;
-altFilter filter;
-PID pid;
+altFilter baroFilter;
+altFilter sonarFilter;
+PIDSystem pids;
+
+// For HC-SR04+
+uint32_t start = 0;
+bool gotEcho = false;
+int hcsr04pDelay = 0; // Due to limitations, update HC-SR04+ only at 10Hz
+
+
 
 // ----------------------------------------------------------------------------
 // Callbacks
@@ -46,34 +57,61 @@ void gy87InterruptUpdater(int gpio, int level, uint32_t tick)
     }
 }
 
-// BMP180 barometer altitude updater, work at 100Hz, Clock 0
-void BMPUpdater()
+// HC-SR04+ 
+// Handle echo
+void getEcho (int gpio, int level, uint32_t tick)
 {
+    if (level == 1) {
+        start = tick;
+    } else {
+        status.sonarAltitude = (tick-start) * 1e-6 * status.sonicVelocity/2;
+        gotEcho = true;
+    }
+}
+
+// Updater thread, works at 100Hz, Clock 0
+void updater()
+{
+    // -------------------------------------------------------------------------
+    // Sensors
+    // BMP180 barometer 
     gy87.updateBMP(config.seaLevelPressure);
 
     status.temperature = gy87.temperature; // C
     status.pressure = gy87.pressure; // Pa
     status.baroAltitude = gy87.baroAltitude; // m
+    status.sonicVelocity = gy87.sonicVelocity; // m/s
+
+    // baroFilter
+    baroFilter.updateAltFilter(gy87.baroAltitude, status.accAbsolute[2], config.dt);
+    status.baroFilterAltitude = baroFilter.filterAltitude;
+    status.baroFilterVelocityZ = baroFilter.filterVelocityZ;
+
+
+    // HC-SR04+ trigger at 10Hz
+    if (hcsr04pDelay == 0) {
+        status.sonar = gotEcho;
+        gotEcho = false;
+        gpioTrigger(HCSR04_TRIG, 40, 1);
+    }
+    hcsr04pDelay += 1;
+    hcsr04pDelay = hcsr04pDelay % 10;
+
+    // sonarFilter, only when sonar is avaliable.
+    if (status.sonar) {
+        sonarFilter.updateAltFilter(status.sonarAltitude, status.accAbsolute[2], config.dt);
+        status.sonarFilterAltitude = sonarFilter.filterAltitude;
+        status.sonarFilterVelocityZ = sonarFilter.filterVelocityZ;
+    }
+
+
+    // -------------------------------------------------------------------------
+    // PID system
+    pids.update(status, config.dt);
+    escControl.YPRT(pids.yprt);
 }
 
-// Altitude complementary filter updater, work at 100Hz, Clock 1
-void altitudeFilterUpdater()
-{
-    filter.updateAltFilter(status.baroAltitude, status.accAbsolute[2], config.dt);
 
-    status.filterAltitude = filter.filterAltitude;
-    status.filterVelocityZ = filter.filterVelocityZ;
-}
-
-// Update ESC and motor using values calculated by pid subsystem, work at 100Hz, Clock 2
-void PIDESCUpdater()
-{
-    pid.updateESC();
-    gpioPWM(ESC_OUT_0, pid.esc[0]);
-    gpioPWM(ESC_OUT_1, pid.esc[1]);
-    gpioPWM(ESC_OUT_2, pid.esc[2]);
-    gpioPWM(ESC_OUT_3, pid.esc[3]);
-}
 
 // ----------------------------------------------------------------------------
 // Routines
@@ -100,7 +138,6 @@ void systemInitialize()
     info("Starting GY87 data gathering...");
     gpioSetAlertFunc(GY87_INTERRUPT_GPIO, gy87InterruptUpdater);
     gy87.startDMP();
-    gpioSetTimerFunc(0, 10, BMPUpdater);
 
     // Wait 10s
     info("Waiting for DMP data to stablize...");
@@ -112,48 +149,27 @@ void systemInitialize()
         status.startAttitude[i] = status.attitude[i];
     }
     status.startHeading = status.heading;
-    status.startAltitude = status.baroAltitude;
 
-    info("Starting altitude filter...");
-    filter.initialize(status.startAltitude, config.k);
-    gpioSetTimerFunc(1, 10, altitudeFilterUpdater);
+    info("Initializing altitude filters...");
+    // Run twice to get temperature and altitude
+    gy87.updateBMP();
+    gy87.updateBMP();
+    baroFilter.initialize(gy87.baroAltitude, config.k);
+    sonarFilter.initialize(0, config.k);
 
-    // Wait for 1 seconds
-    gpioSleep(PI_TIME_RELATIVE, 1, 0);
-    info("Getting starting altitude from altitude filter reading...");
-    status.startAltitude = status.filterAltitude;
-    info("Altitude = "+to_string(startAltitude));
-}
-
-void pidInitialize()
-{
     info("Initializing PID system...");
+    pids.initialize(config.ratePIDSystemConfig, config.attitudePIDSystemConfig, config.ZPIDSystemConfig);
+    pids.setAttitudeTargets(config.startAttitude);
+    pids.setVzTarget(0, ALTITUDE_BARO);
 
-    //PID tune
-    pid.yawPID[0] = 100;
-    pid.yawPID[1] = 1;
-    pid.yawPID[2] = 0.03;
+    info("Starting updater thread...");
+    gpioSetTimerFunc(0, 10, updater);
 
-    pid.pitchPID[0] = 100;
-    pid.pitchPID[1] = 1;
-    pid.pitchPID[2] = 0.02;
-
-    pid.rollPID[0] = 100;
-    pid.rollPID[1] = 1;
-    pid.rollPID[2] = 0.02;
-
-    pid.heightPID[0] = 20;
-    pid.heightPID[1] = 20;
-    pid.heightPID[2] = 20;
-
-    pid.initialize();
-    // Recording starting attitude, in case ground is not level
-    for (int i=0;i<3;i++) {
-        pid.target[i] = status.startAttitude[i];
-    }
-    pid.target[3] = status.startAltitude;
-
-    gpioSetTimerFunc(2, 10, PIDESCUpdater);
+    // Wait for 2 seconds
+    gpioSleep(PI_TIME_RELATIVE, 2, 0);
+    info("Getting starting altitude from altitude filter reading...");
+    status.startAltitude = status.baroFilterAltitude;
+    info("Altitude = "+to_string(startAltitude));
 }
 
 void cleanup()
@@ -168,15 +184,17 @@ void cleanup()
 using namespace std;
 void statusDisplayer()
 {
-    cout << "Yaw: " << status.attitude[0] << " ";
-    cout << "Pitch: " << status.attitude[1] << " ";
-    cout << "Roll: " << status.attitude[2] << " ";
-    cout << "Baro: " << status.baroAltitude << " ";
-    cout << "Altitdue: " << status.filterAltitude << " ";
-    cout << "ESC 0: " << gpioGetPWMdutycycle(ESC_OUT_0) << " ";
-    cout << "ESC 1: " << gpioGetPWMdutycycle(ESC_OUT_1) << " ";
-    cout << "ESC 2: " << gpioGetPWMdutycycle(ESC_OUT_2) << " ";
-    cout << "ESC 3: " << gpioGetPWMdutycycle(ESC_OUT_3) << " ";
+    cout << "Y: " << status.attitude[0] << " ";
+    cout << "P: " << status.attitude[1] << " ";
+    cout << "R: " << status.attitude[2] << " ";
+    //cout << "Baro: " << status.baroAltitude << " ";
+    //cout << "Sonar: " << status.sonarAltitude << " ";
+    cout << "BA: " << status.baroFilterAltitude << " ";
+    cout << "SA: " << status.sonarFilterAltitude << " ";
+    cout << "E0: " << gpioGetPWMdutycycle(config.controlled_esc[0]) << " ";
+    cout << "E1: " << gpioGetPWMdutycycle(config.controlled_esc[1]) << " ";
+    cout << "E2: " << gpioGetPWMdutycycle(config.controlled_esc[2]) << " ";
+    cout << "E3: " << gpioGetPWMdutycycle(config.controlled_esc[3]) << " ";
     cout << endl;
 }
 
@@ -189,24 +207,21 @@ int main(int argc, char** argv)
     string command;
     while (true) {
         cin >> command;
-        if (command == "con") { 
-            startingConditionInitialize();
-            continue;
-        }
         if (command == "arm") {
-            arming();
+            escControl.arming();
             continue;
         }
         if (command == "start") {
-            startMotor();
+            escControl.startMotor();
             continue;
         }
-        if (command == "pid") {
-            pidInitialize();
+        if (command == "init") {
+            systemInitialize();
             continue;
         }
         if (command == "stop") {
-            stopMotor();
+            gpioSetTimerFunc(0, 10, NULL);
+            escControl.stopMotor();
             continue;
         }
         if (command == "quit") {
@@ -218,19 +233,19 @@ int main(int argc, char** argv)
             continue;
         }
         if (command[0] == 'y') {
-            pid.target[0] = std::stof(command.substr(1));
+            pids.setAttitudeTarget(0, std::stof(command.substr(1)));
             continue;
         }
         if (command[0] == 'p') {
-            pid.target[1] = std::stof(command.substr(1));
+            pids.setAttitudeTarget(1, std::stof(command.substr(1)));
             continue;
         }
         if (command[0] == 'r') {
-            pid.target[2] = std::stof(command.substr(1));
+            pids.setAttitudeTarget(2, std::stof(command.substr(1)));
             continue;
         }
         if (command[0] == 'a') {
-            pid.target[3] = std::stof(command.substr(1));
+            pids.setAltitudeTarget(std::stof(command.substr(1)), ALTITUDE_BARO);
             continue;
         }
         err("Unknow command: "+command);

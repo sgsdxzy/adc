@@ -2,6 +2,7 @@
 #define _PID_H_
 
 #include <atomic>
+#include <cmath>
 #include "status.h"
 #include "debug.h"
 

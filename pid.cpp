@@ -109,6 +109,20 @@ void PIDSystem::update(statusContainer& status, float dt)
                 yprt[i] = ratePID[i].update(rateTargets[i] - rates[i], 0, dt);
                 break;
             case PID_ATTITUDE:
+                if (i==0) {
+                    // Yaw round up
+                    float error = attitudeTargets[0] - status.attitude[0];
+                    if (error > M_PI) {
+                        error -= 2*M_PI;
+                        yprt[0] = attitudePID[0].update(error, rates[0], dt);
+                        break;
+                    }
+                    if (error < -M_PI) {
+                        error += 2*M_PI;
+                        yprt[0] = attitudePID[0].update(error, rates[0], dt);
+                        break;
+                    }
+                }
                 yprt[i] = attitudePID[i].update(attitudeTargets[i] - status.attitude[i], rates[i], dt);
                 break;
             default:

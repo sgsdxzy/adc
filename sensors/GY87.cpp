@@ -146,6 +146,7 @@ void GY87::updateBMP(float seaLevelPressure)
         pthread_mutex_lock(&i2cMutex);
         temperature = bmp.getTemperatureC();
         pthread_mutex_unlock(&i2cMutex);
+        sonicVelocity = 331.3 * sqrt(1 + temperature/273.15); // m/s
     } else {
         pthread_mutex_lock(&i2cMutex);
         bmp.setControl(BMP085_MODE_PRESSURE_1) ; //taking reading in highest accuracy measurement mode

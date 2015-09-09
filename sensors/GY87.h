@@ -8,8 +8,6 @@
 #include "BMP085.h"
 #include "../debug.h"
 
-using std::atomic;
-
 class GY87 {
     public:
         GY87() {};
@@ -37,6 +35,7 @@ class GY87 {
         float temperature;
         float pressure;
         float baroAltitude;
+        float sonicVelocity;
 
     private:
         // Devices
