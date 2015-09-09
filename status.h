@@ -1,6 +1,8 @@
 #ifndef _STATUS_H_
 #define _STATUS_H_
 
+#include <atomic>
+
 // All in SI
 class statusContainer
 {
