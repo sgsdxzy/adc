@@ -13,23 +13,25 @@ class statusContainer
         std::atomic<float> gyroscope[3]; // Gyroscope data [gx, gy, gz]
         std::atomic<float> accRelative[3]; // axRelative, ayRelative, azRelative;
         std::atomic<float> accAbsolute[3]; // axAbsolute, ayAbsolute, azAbsolute;
-        std::atomic<float> temperature;
-        std::atomic<float> pressure;
-        std::atomic<float> baroAltitude;
+        float temperature;
+        float pressure;
+        float sonicVelocity;
+        float baroAltitude;
 
         // HC-SR04+
-        std::atomic<float> sonarAltitude;
+        float sonarAltitude;
+        bool sonar; // Indicate whether sonar is in working range
 
         // Baro filter
-        std::atomic<float> baroFilterAltitude;
-        std::atomic<float> baroFilterVelocityZ;
+        float baroFilterAltitude;
+        float baroFilterVelocityZ;
 
         // Sonar filter 
-        std::atomic<float> sonarFilterAltitude;
-        std::atomic<float> sonarFilterVelocityZ;
+        float sonarFilterAltitude;
+        float sonarFilterVelocityZ;
 
         // Optical flow
-        std::atomic<float> opticalVelocity[2]; // [vx, vy]
+        // std::atomic<float> opticalVelocity[2]; // [vx, vy]
 
         // Starting conditions
         float startAttitude[3]; // [Yaw, pitch, roll]
