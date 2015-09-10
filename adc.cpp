@@ -3,7 +3,7 @@
 #include <pigpio.h>
 #include "status.h"
 #include "config.h"
-#include "sensors/GY87.h"
+#include "GY87.h"
 #include "altFilter.h"
 #include "ESCController.h"
 #include "pid.h"

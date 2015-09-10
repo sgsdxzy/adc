@@ -25,7 +25,12 @@ class configuration
         int ESCOutMax = 1800;
 
         // PID system
-        float ratePIDSystemConfig[3][7];
+        float ratePIDSystemConfig[3][7] =
+        {
+            {100, 1, 0, 200, -200, 400, -400},
+            {300, 1, 0, 200, -200, 400, -400},
+            {300, 1, 0, 200, -200, 400, -400}
+        };
         float attitudePIDSystemConfig[3][7] = 
         {
             {100, 1, 0.03, 200, -200, 400, -400},
