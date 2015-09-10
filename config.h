@@ -1,6 +1,8 @@
 #ifndef _CONFIG_ADC_
 #define _CONFIG_ADC_
 
+#include <iostream>
+
 class configuration
 {
     public:
@@ -39,5 +41,12 @@ class configuration
             {20, 20, 20, 25, 0, 600, 0}, 
         };
 };
+
+using std::ostream;
+using std::istream;
+using std::endl;
+
+std::ostream& operator<<(std::ostream& stream, configuration const& data);
+std::istream& operator>>(std::istream& stream, configuration& data);
 
 #endif // _CONFIG_ADC_
