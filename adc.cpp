@@ -1,4 +1,5 @@
 // ----------------------------------------------------------------------------
+#include <fstream>
 #include <pigpio.h>
 #include "status.h"
 #include "config.h"
@@ -123,7 +124,11 @@ void updater()
 // Initialize all sensors and motors
 void systemInitialize()
 {
-    // Initialize sensors
+    info("Loading configuration file...");
+    std::ifstream configFile("config.txt");
+    configFile >> config;
+    configFile.close();
+
     info("Initializing system...");
     I2Cdev::initialize();
     gpioInitialise();
