@@ -14,7 +14,7 @@ class configuration
 
         // Altitude filter
         float baroFilterConfig[3] = {0.55, 1.0, 0.05};
-        float sonarFilterConfig[3] = {1.0, 10.0, 0.02};
+        float sonarFilterConfig[3] = {0.75, 1.0, 0.035};
 
         // ESC controller
         int controlled_esc[4] = {6, 13, 19, 26};

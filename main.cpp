@@ -50,9 +50,9 @@ void gy87InterruptUpdater(int gpio, int level, uint32_t tick)
         status.gyroscope[0]   = (float)gy87.gyro.x/32768*1000*M_PI/180; // rad/s
         status.gyroscope[1]   = (float)gy87.gyro.y/32768*1000*M_PI/180;
         status.gyroscope[2]   = (float)gy87.gyro.z/32768*1000*M_PI/180;
-        status.gravity[0]     = (float)gy87.gravity.x/8192;
-        status.gravity[1]     = (float)gy87.gravity.y/8192;
-        status.gravity[2]     = (float)gy87.gravity.z/8192;
+        status.gravity[0]     = gy87.gravity.x;
+        status.gravity[1]     = gy87.gravity.y;
+        status.gravity[2]     = gy87.gravity.z;
         status.accRelative[0] = (float)gy87.aaReal.x/8192*config.g; // m/s^2
         status.accRelative[1] = (float)gy87.aaReal.y/8192*config.g;
         status.accRelative[2] = (float)gy87.aaReal.z/8192*config.g;
@@ -69,7 +69,7 @@ void getEcho (int gpio, int level, uint32_t tick)
     if (level == 1) {
         start = tick;
     } else {
-        status.sonarAltitude = ((tick-start) * 1e-6 * status.sonicVelocity/2) * (-status.gravity[2]);
+        status.sonarAltitude = ((tick-start) * 1e-6 * status.sonicVelocity/2) * status.gravity[2];
         gotEcho = true;
     }
 }
@@ -198,19 +198,20 @@ void cleanup()
 using namespace std;
 void statusDisplayer()
 {
-    cout << "Y: " << status.attitude[0] << " ";
-    cout << "P: " << status.attitude[1] << " ";
-    cout << "R: " << status.attitude[2] << " ";
-    cout << "ZA: " << status.accAbsolute[2] << " ";
-    //cout << "Baro: " << status.baroAltitude << " ";
-    //cout << "Sonar: " << status.sonarAltitude << " ";
-    cout << "BA: " << status.baroAltitude << " ";
-    cout << "SA: " << status.sonarAltitude << " ";
-    cout << "SF: " << status.sonarFilterAltitude << " ";
-    //cout << "E0: " << gpioGetPWMdutycycle(config.controlled_esc[0]) << " ";
-    //cout << "E1: " << gpioGetPWMdutycycle(config.controlled_esc[1]) << " ";
-    //cout << "E2: " << gpioGetPWMdutycycle(config.controlled_esc[2]) << " ";
-    //cout << "E3: " << gpioGetPWMdutycycle(config.controlled_esc[3]) << " ";
+    //cout << "Y: " << status.attitude[0] << "\t";
+    //cout << "P: " << status.attitude[1] << "\t";
+    //cout << "R: " << status.attitude[2] << "\t";
+    cout << "ZA: " << status.accAbsolute[2] << "\t";
+    cout << "GZ: " << status.gravity[2] << "\t";
+    //cout << "Baro: " << status.baroAltitude << "\t";
+    //cout << "Sonar: " << status.sonarAltitude << "\t";
+    cout << "BA: " << status.baroAltitude << "\t";
+    cout << "SA: " << status.sonarAltitude << "\t";
+    cout << "SF: " << status.sonarFilterAltitude << "\t";
+    //cout << "E0: " << gpioGetPWMdutycycle(config.controlled_esc[0]) << "\t";
+    //cout << "E1: " << gpioGetPWMdutycycle(config.controlled_esc[1]) << "\t";
+    //cout << "E2: " << gpioGetPWMdutycycle(config.controlled_esc[2]) << "\t";
+    //cout << "E3: " << gpioGetPWMdutycycle(config.controlled_esc[3]) << "\t";
     cout << endl;
 }
 
