@@ -13,7 +13,8 @@ class configuration
         int16_t gy87Offset[6] = {-1685, 3937, 1803, 0, -17, 109};
 
         // Altitude filter
-        float k[3] = {0.55, 1.0, 0.05};
+        float baroFilterConfig[3] = {0.55, 1.0, 0.05};
+        float sonarFilterConfig[3] = {1.0, 10.0, 0.02};
 
         // ESC controller
         int controlled_esc[4] = {6, 13, 19, 26};

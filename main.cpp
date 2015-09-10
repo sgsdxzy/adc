@@ -50,6 +50,9 @@ void gy87InterruptUpdater(int gpio, int level, uint32_t tick)
         status.gyroscope[0]   = (float)gy87.gyro.x/32768*1000*M_PI/180; // rad/s
         status.gyroscope[1]   = (float)gy87.gyro.y/32768*1000*M_PI/180;
         status.gyroscope[2]   = (float)gy87.gyro.z/32768*1000*M_PI/180;
+        status.gravity[0]     = (float)gy87.gravity.x/8192;
+        status.gravity[1]     = (float)gy87.gravity.y/8192;
+        status.gravity[2]     = (float)gy87.gravity.z/8192;
         status.accRelative[0] = (float)gy87.aaReal.x/8192*config.g; // m/s^2
         status.accRelative[1] = (float)gy87.aaReal.y/8192*config.g;
         status.accRelative[2] = (float)gy87.aaReal.z/8192*config.g;
@@ -66,7 +69,7 @@ void getEcho (int gpio, int level, uint32_t tick)
     if (level == 1) {
         start = tick;
     } else {
-        status.sonarAltitude = (tick-start) * 1e-6 * status.sonicVelocity/2;
+        status.sonarAltitude = ((tick-start) * 1e-6 * status.sonicVelocity/2) * (-status.gravity[2]);
         gotEcho = true;
     }
 }
@@ -162,8 +165,8 @@ void initialize()
     // Run twice to get temperature and altitude
     gy87.updateBMP(config.seaLevelPressure);
     gy87.updateBMP(config.seaLevelPressure);
-    baroFilter.initialize(gy87.baroAltitude, config.k);
-    sonarFilter.initialize(0, config.k);
+    baroFilter.initialize(gy87.baroAltitude, config.baroFilterConfig);
+    sonarFilter.initialize(0, config.sonarFilterConfig);
 
     info("Initializing PID system...");
     pids.initialize(config.ratePIDSystemConfig, config.attitudePIDSystemConfig, config.ZPIDSystemConfig);

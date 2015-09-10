@@ -11,6 +11,7 @@ class statusContainer
         std::atomic<float> attitude[3]; // [Yaw, pitch, roll]
         std::atomic<float> heading;          // Magnetic heading.
         std::atomic<float> gyroscope[3]; // Gyroscope data [gx, gy, gz]
+        std::atomic<float> gravity[3]; // Gravity's component along each axis, normalized to 1
         std::atomic<float> accRelative[3]; // axRelative, ayRelative, azRelative;
         std::atomic<float> accAbsolute[3]; // axAbsolute, ayAbsolute, azAbsolute;
         float temperature;
