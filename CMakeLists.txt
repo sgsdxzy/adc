@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.3.1)
 project (adc)
+set(CMAKE_BUILD_TYPE Release)
 
-list( APPEND CMAKE_CXX_FLAGS "-std=c++0x -g ${CMAKE_CXX_FLAGS}" )
+# Using c++11
+list( APPEND CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}" )
 
+# main adc program
 include_directories(sensors)
-file(GLOB SOURCES "*.cpp" "sensors/*.cpp")
- 
+set(SOURCES "altFilter.cpp"  "config.cpp"  "debug.cpp"  "ESCController.cpp"
+    "main.cpp"  "pid.cpp")
+add_subdirectory(sensors)
 add_executable(adc ${SOURCES})
-target_link_libraries(adc bcm2835 pigpio pthread)
+target_link_libraries(adc sensors pigpio)
