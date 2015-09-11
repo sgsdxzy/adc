@@ -33,6 +33,7 @@ uint32_t start = 0;
 bool gotEcho = false;
 int hcsr04pDelay = 0; // Due to limitations, update HC-SR04+ only at 10Hz
 
+bool PIDEnabled = false;
 
 
 // ----------------------------------------------------------------------------
@@ -113,8 +114,10 @@ void updater()
 
     // -------------------------------------------------------------------------
     // PID system
-    pids.update(status, config.dt);
-    escControl.YPRT(pids.yprt);
+    if (PIDEnabled) {
+        pids.update(status, config.dt);
+        escControl.YPRT(pids.yprt);
+    }
 }
 
 
@@ -235,6 +238,7 @@ int main(int argc, char** argv)
         }
         if (command == "start") {
             escControl.startMotor();
+            PIDEnabled = true;
             continue;
         }
         if (command == "init") {
@@ -242,7 +246,8 @@ int main(int argc, char** argv)
             continue;
         }
         if (command == "stop") {
-            gpioSetTimerFunc(0, 10, NULL);
+            PIDEnabled = false;
+            gpioDelay(100000);
             escControl.stopMotor();
             continue;
         }
@@ -268,6 +273,10 @@ int main(int argc, char** argv)
         }
         if (command[0] == 'a') {
             pids.setAltitudeTarget(std::stof(command.substr(1)), ALTITUDE_BARO);
+            continue;
+        }
+        if (command[0] == 's') {
+            pids.setAltitudeTarget(std::stof(command.substr(1)), ALTITUDE_SONAR);
             continue;
         }
         err("Unknow command: "+command);
