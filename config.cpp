@@ -25,6 +25,10 @@ ostream& operator<<(ostream& stream, configuration const& config)
         stream << config.controlled_esc[i] << " ";
     }
     stream << endl;
+    for (int i=0;i<4;i++) {
+        stream << config.ESCSanity[i] << " ";
+    }
+    stream << endl;
 
     stream << config.ESCFrequency << endl;
     stream << config.ESCOutMin << endl;
@@ -48,6 +52,11 @@ ostream& operator<<(ostream& stream, configuration const& config)
         }
         stream << endl;
     }
+    for (int i=0;i<4;i++) {
+        stream << config.yprtSanity[i] << " ";
+    }
+    stream << endl;
+
 
     return stream;
 }
@@ -72,6 +81,9 @@ istream& operator>>(istream& stream, configuration& config)
     for (int i=0;i<4;i++) {
         stream >> config.controlled_esc[i];
     }
+    for (int i=0;i<4;i++) {
+        stream >> config.ESCSanity[i];
+    }
     stream >> config.ESCFrequency;
     stream >> config.ESCOutMin;
     stream >> config.ESCOutMax;
@@ -90,6 +102,9 @@ istream& operator>>(istream& stream, configuration& config)
         for (int j=0;j<7;j++) {
             stream >> config.ZPIDSystemConfig[i][j];
         }
+    }
+    for (int i=0;i<4;i++) {
+        stream >> config.yprtSanity[i];
     }
 
     return stream;

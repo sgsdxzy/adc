@@ -20,6 +20,7 @@ class configuration
 
         // ESC controller
         int controlled_esc[4] = {6, 13, 19, 26};
+        int ESCSanity[4] = {12, 12, 12, 12};
         int ESCFrequency = 400; // Hz
         int ESCOutMin = 1200;
         int ESCOutMax = 1800;
@@ -45,6 +46,7 @@ class configuration
             {20, 20, 20, 25, 0, 600, 0}, 
             {20, 20, 20, 25, 0, 600, 0}, 
         };
+        int yprtSanity[4] = {8, 8, 8, 3};
 };
 
 using std::ostream;

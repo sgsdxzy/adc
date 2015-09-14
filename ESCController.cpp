@@ -1,11 +1,12 @@
 #include "ESCController.h"
 
-void ESCController::initialize(int controlled_esc[4], int frequency, int min, int max)
+void ESCController::initialize(int controlled_esc[4], int ESCSanity[4], int frequency, int min, int max)
 {
     for (int i=0;i<4;i++) {
         ESC[i] = controlled_esc[i];
         gpioSetPWMfrequency(ESC[i], frequency);
         gpioSetPWMrange(ESC[i], 1000000/frequency);
+        sanity[i] = ESCSanity[i];
     }
     outMin = min;
     outMax = max;
@@ -20,17 +21,25 @@ void ESCController::allSetTo(int width)
 
 void ESCController::arming()
 {
-    allSetTo(1000);
+    if (!armed) {
+        allSetTo(1000);
+        gpioSleep(PI_TIME_RELATIVE, 5, 0);
+        armed = true;
+    }
 }
 
-void ESCController::startMotor()
-{
-    allSetTo(outMin);
-}
-    
 void ESCController::stopMotor()
 {
-    allSetTo(1000);
+    if (armed) {
+        allSetTo(1000);
+    }
+}
+
+void ESCController::reset()
+{
+    for (int i=0;i<4;i++) {
+        oldESC[i] = outMin;
+    }
 }
 
 void ESCController::YPRT(int yprt[4])
@@ -68,6 +77,17 @@ void ESCController::YPRT(int yprt[4])
                 ESCOutput[i] = outMax;
             }
         }
+    }
+
+    // Sanity checker
+    for (i=0;i<4;i++) {
+        if (ESCOutput[i] - oldESC[i] > sanity[i]) {
+            ESCOutput[i] = oldESC[i] + sanity[i];
+        }
+        if (ESCOutput[i] - oldESC[i] < -sanity[i]) {
+            ESCOutput[i] = oldESC[i] - sanity[i];
+        }
+        oldESC[i] = ESCOutput[i];
     }
 
     // Output
