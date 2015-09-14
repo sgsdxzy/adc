@@ -49,9 +49,9 @@ void gy87InterruptUpdater(int gpio, int level, uint32_t tick)
             status.attitude[i] = gy87.ypr[i]; // rad
         }
         status.heading = gy87.mh; // rad
-        status.gyroscope[0]   = (float)gy87.gyro.x/32768*500*M_PI/180; // rad/s
-        status.gyroscope[1]   = (float)gy87.gyro.y/32768*500*M_PI/180;
-        status.gyroscope[2]   = (float)gy87.gyro.z/32768*500*M_PI/180;
+        status.gyroscope[0]   = (float)gy87.gyro.x/32768*1000*M_PI/180; // rad/s
+        status.gyroscope[1]   = (float)gy87.gyro.y/32768*1000*M_PI/180;
+        status.gyroscope[2]   = (float)gy87.gyro.z/32768*1000*M_PI/180;
         status.gravity[0]     = gy87.gravity.x;
         status.gravity[1]     = gy87.gravity.y;
         status.gravity[2]     = gy87.gravity.z;
@@ -210,11 +210,10 @@ void statusDisplayer()
     //cout << "P: " << status.attitude[1] << "\t";
     //cout << "R: " << status.attitude[2] << "\t";
     cout << "ZA: " << status.accAbsolute[2] << "\t";
-    //cout << "GZ: " << status.gravity[2] << "\t";
+    cout << "GZ: " << status.gravity[2] << "\t";
     //cout << "Baro: " << status.baroAltitude << "\t";
     //cout << "Sonar: " << status.sonarAltitude << "\t";
-    cout << "GX: " << status.gyroscope[0] << "\t";
-    cout << "BF: " << status.baroFilterAltitude << "\t";
+    cout << "BA: " << status.baroAltitude << "\t";
     cout << "SA: " << status.sonarAltitude << "\t";
     cout << "SF: " << status.sonarFilterAltitude << "\t";
     //cout << "E0: " << gpioGetPWMdutycycle(config.controlled_esc[0]) << "\t";
