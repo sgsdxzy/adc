@@ -4,13 +4,14 @@
 class altFilter
 {
     public:
-        void initialize(float startAltitude, float k[3]);
-        void updateAltFilter(float altitude, float acceleration, float dt);
+        void initialize(float dt, float startAltitude, float k[3]);
+        void updateAltFilter(float altitude, float acceleration);
 
         float filterAltitude = 0;
         float filterVelocityZ = 0;
         float altErrorI = 0; // Integrated altitude error
 
+        float dt;
         float kp1; // PI observer velocity gain 
         float kp2;  // PI observer position gain
         float ki; // PI observer integral gain (bias cancellation)

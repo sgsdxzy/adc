@@ -1,7 +1,8 @@
 #include "altFilter.h"
 
-void altFilter::initialize(float startAltitude, float k[3])
+void altFilter::initialize(float dt, float startAltitude, float k[3])
 {
+    this->dt = dt;
     filterAltitude = startAltitude;
     filterVelocityZ = 0;
     altErrorI = 0;
@@ -10,7 +11,7 @@ void altFilter::initialize(float startAltitude, float k[3])
     ki = k[2];
 }
 
-void altFilter::updateAltFilter(float altitude, float acceleration, float dt)
+void altFilter::updateAltFilter(float altitude, float acceleration)
 {
     float altError = altitude - filterAltitude;
     altErrorI += altError * dt;
