@@ -1,7 +1,27 @@
 #include "pid.h"
 
-void PID::initialize(float pidConfig[7])
+float minusError(float target, float current)
 {
+    return target - current;
+}
+
+float circularError(float target, float current)
+{                   
+    float error = target - current;
+    if (error > M_PI) {
+        error -= 2*M_PI;
+        return error;
+    }
+    if (error < -M_PI) {
+        error += 2*M_PI;
+        return error;
+    }
+}
+
+
+void PID::initialize(float dt, float pidConfig[7])
+{
+    this->dt = dt;
     for (int i=0;i<3;i++) {
         pid[i] = pidConfig[i];
     }
@@ -11,8 +31,9 @@ void PID::initialize(float pidConfig[7])
     outMin = pidConfig[6];
 }
 
-float PID::update(float error, float errorD, float dt)
+float PID::update()
 {
+    float error = getError(target, current);
     errorI += error*dt;
     if (errorI > errorIMax) {
         errorI = errorIMax;
@@ -21,9 +42,13 @@ float PID::update(float error, float errorD, float dt)
         errorI = errorIMin;
     }
 
-    // prevError = error;
+    float result = pid[0] * error + pid[1] * errorI + pid[2] * errorD;
+    if (next) {
+        next->target = result;
+        return next->update();
+    }
 
-    return pid[0] * error + pid[1] * errorI + pid[2] * errorD;
+    return result;
 }
 
 /*
@@ -34,57 +59,49 @@ float PID::update(float error, float dt)
 }
 */
 
-void PIDSystem::initialize(float ratePIDSystemConfig[3][7], float attitudePIDSystemConfig[3][7], float ZPIDSystemConfig[4][7])
+void PID::reset()
+{
+    errorI = 0;
+    if (next) {
+        next->reset();
+    }
+}
+
+void PIDSystem::initialize(float dt, int yprtSanity[4], float PIDSystemConfig[5][7])
 {
     int i;
+
+    this->dt = dt;
+
+    for (i=0;i<4;i++) {
+        sanity[i] = yprtSanity[i];
+    }
+
     for (i=0;i<3;i++) {
-        ratePID[i].initialize(ratePIDSystemConfig[i]);
-        attitudePID[i].initialize(attitudePIDSystemConfig[i]);
+        attitudePID[i].initialize(dt, PIDSystemConfig[i]);
     }
-    for (i=0;i<2;i++) {
-        VzPID[i].initialize(ZPIDSystemConfig[i]);
-        altitudePID[i].initialize(ZPIDSystemConfig[i+2]);
+    for (i=3;i<5;i++) {
+        altitudePID[i].initialize(dt, PIDSystemConfig[i]);
     }
-}
 
-void PIDSystem::setRateTarget(int index, float target)
-{
-    // Setting target first than enabled PID status to get good result in multithreading
-    rateTargets[index] = target;
-
-    PIDTypes[index] = PID_RATE;
-}
-
-void PIDSystem::setRateTargets(float targets[3])
-{
-    for (int i=0;i<3;i++) {
-        rateTargets[i] = targets[i];
-        PIDTypes[i] = PID_RATE;
-    }
+    // Yaw requires circularError
+    attitudePID[0].getError = circularError;
 }
 
 void PIDSystem::setAttitudeTarget(int index, float target)
 {
     // Setting target first than enabled PID status to get good result in multithreading
-    attitudeTargets[index] = target;
+    attitudePID[index].target = target;
 
-    PIDTypes[index] = PID_ATTITUDE;
+    enabled[index] = &attitudePID[index];
 }
 
 void PIDSystem::setAttitudeTargets(float targets[3])
 {
     for (int i=0;i<3;i++) {
-        attitudeTargets[i] = targets[i];
-        PIDTypes[i] = PID_ATTITUDE;
+        attitudePID[i].target = targets[i];
+        enabled[i] = &attitudePID[i];
     }
-}
-
-void PIDSystem::setVzTarget(float target, uint8_t type)
-{
-    // Some subtle sequence
-    VzTarget = target;
-    altPIDType = PID_RATE;
-    altitudeType = type;
 }
 
 void PIDSystem::setAltitudeTarget(float target, uint8_t type)
@@ -112,16 +129,6 @@ void PIDSystem::update(statusContainer& status, float dt)
                 if (i==0) {
                     // Yaw round up
                     float error = attitudeTargets[0] - status.attitude[0];
-                    if (error > M_PI) {
-                        error -= 2*M_PI;
-                        yprt[0] = attitudePID[0].update(error, rates[0], dt);
-                        break;
-                    }
-                    if (error < -M_PI) {
-                        error += 2*M_PI;
-                        yprt[0] = attitudePID[0].update(error, rates[0], dt);
-                        break;
-                    }
                 }
                 yprt[i] = attitudePID[i].update(attitudeTargets[i] - status.attitude[i], rates[i], dt);
                 break;
