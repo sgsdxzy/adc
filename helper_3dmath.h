@@ -4,6 +4,7 @@
 //
 // Changelog:
 //     2012-06-05 - add 3D math helper file to DMP6 example sketch
+//     2014-04-14 - added int32_t constructor (Gregory Dymarek, gregd72002@gmail.com)
 
 /* ============================================
 I2Cdev device library code is placed under the MIT license
@@ -46,6 +47,13 @@ class Quaternion {
             z = 0.0f;
         }
         
+	Quaternion(int32_t *data) {
+	    w = (float)data[0] / 16384.0f;
+	    x = (float)data[1] / 16384.0f;
+	    y = (float)data[2] / 16384.0f;
+	    z = (float)data[3] / 16384.0f;
+	}
+
         Quaternion(float nw, float nx, float ny, float nz) {
             w = nw;
             x = nx;
