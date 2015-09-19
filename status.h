@@ -14,22 +14,19 @@ class statusContainer
         std::atomic<float> gravity[3]; // Gravity's component along each axis, normalized to 1
         std::atomic<float> accRelative[3]; // axRelative, ayRelative, azRelative;
         std::atomic<float> accAbsolute[3]; // axAbsolute, ayAbsolute, azAbsolute;
-        float temperature;
-        float pressure;
-        float sonicVelocity;
-        float baroAltitude;
+        std::atomic<float> temperature;
+        std::atomic<float> pressure;
+        std::atomic<float> sonicVelocity;
+        std::atomic<float> baroAltitude;
 
         // HC-SR04+
-        float sonarAltitude;
-        bool sonar; // Indicate whether sonar is in working range
+        std::atomic<float> sonarAltitude(0);
+        std::atomic<float> sonarVelocityZ(0);
+        std::atomic<bool> sonar(false); // Indicate whether sonar is in working range
 
         // Baro filter
-        float baroFilterAltitude;
-        float baroFilterVelocityZ;
-
-        // Sonar filter 
-        float sonarFilterAltitude;
-        float sonarFilterVelocityZ;
+        std::atomic<float> baroFilterAltitude;
+        std::atomic<float> baroFilterVelocityZ;
 
         // Optical flow
         // std::atomic<float> opticalVelocity[2]; // [vx, vy]
