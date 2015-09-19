@@ -107,7 +107,12 @@ void updater()
     // sonarFilter, only when sonar is avaliable.
     if (status.sonar) {
         sonarFilter.updateAltFilter(status.sonarAltitude, status.accAbsolute[2], config.dt);
-        status.sonarFilterAltitude = sonarFilter.filterAltitude;
+        if (sonarFilter.filterAltitude < 0) {
+            // Not possible to < 0
+            status.sonarFilterAltitude = 0;
+        } else {
+            status.sonarFilterAltitude = sonarFilter.filterAltitude;
+        }
         status.sonarFilterVelocityZ = sonarFilter.filterVelocityZ;
     }
 
@@ -179,7 +184,8 @@ void initialize()
     info("Initializing PID system...");
     pids.initialize(config.ratePIDSystemConfig, config.attitudePIDSystemConfig, config.ZPIDSystemConfig);
     pids.setAttitudeTargets(status.startAttitude);
-    pids.setVzTarget(0.028, ALTITUDE_BARO);
+    //pids.setVzTarget(0.028, ALTITUDE_BARO);
+    pids.setAltitudeTarget(0, ALTITUDE_SONAR);
 
     info("Starting updater thread...");
     gpioSetMode(HCSR04_ECHO, 0);
@@ -210,12 +216,15 @@ void statusDisplayer()
     //cout << "P: " << status.attitude[1] << "\t";
     //cout << "R: " << status.attitude[2] << "\t";
     cout << "ZA: " << status.accAbsolute[2] << "\t";
-    cout << "GZ: " << status.gravity[2] << "\t";
+    //cout << "GZ: " << status.gravity[2] << "\t";
     //cout << "Baro: " << status.baroAltitude << "\t";
     //cout << "Sonar: " << status.sonarAltitude << "\t";
     cout << "BA: " << status.baroAltitude << "\t";
+    cout << "BF: " << status.baroFilterAltitude << "\t";
+    cout << "BV: " << status.baroFilterVelocityZ << "\t";
     cout << "SA: " << status.sonarAltitude << "\t";
     cout << "SF: " << status.sonarFilterAltitude << "\t";
+    cout << "SV: " << status.sonarFilterVelocityZ << "\t";
     //cout << "E0: " << gpioGetPWMdutycycle(config.controlled_esc[0]) << "\t";
     //cout << "E1: " << gpioGetPWMdutycycle(config.controlled_esc[1]) << "\t";
     //cout << "E2: " << gpioGetPWMdutycycle(config.controlled_esc[2]) << "\t";
@@ -275,7 +284,7 @@ int main(int argc, char** argv)
             pids.setAltitudeTarget(std::stof(command.substr(1)), ALTITUDE_BARO);
             continue;
         }
-        if (command[0] == 's') {
+        if (command[0] == 'n') {
             pids.setAltitudeTarget(std::stof(command.substr(1)), ALTITUDE_SONAR);
             continue;
         }
