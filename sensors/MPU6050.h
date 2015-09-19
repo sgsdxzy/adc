@@ -774,6 +774,8 @@ class MPU6050 {
         int16_t getZGyroOffset();
         void setZGyroOffset(int16_t offset);
         
+        void getOffsets(int16_t offsets[6]);
+        void setOffsets(const int16_t offsets[6]);
         // INT_ENABLE register (DMP functions)
         bool getIntPLLReadyEnabled();
         void setIntPLLReadyEnabled(bool enabled);
@@ -821,13 +823,14 @@ class MPU6050 {
         uint8_t getDMPConfig2();
         void setDMPConfig2(uint8_t config);
 
+        float compassScale = 1/1090;
+
     private:
         uint8_t devAddr;
         uint8_t buffer[20];
 
         float gyroScale;
         float accelScale;
-        float compassScale = 1/1090;
 };
 
 #endif /* _MPU6050_H_ */

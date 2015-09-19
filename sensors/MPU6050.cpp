@@ -63,8 +63,6 @@ MPU6050::MPU6050(uint8_t address) {
 void MPU6050::initialize() {
     // Reset the full device
     reset();
-    gpioDelay(100000);
-
 
     setClockSource(MPU6050_CLOCK_PLL_ZGYRO);
     setFullScaleGyroRange(MPU6050_GYRO_FS_250);
@@ -2444,6 +2442,7 @@ void MPU6050::resetSensors() {
  */
 void MPU6050::reset() {
     writeBit(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_DEVICE_RESET_BIT, true);
+    gpioDelay(100000); // Delay 100ms
 }
 /** Get sleep mode status.
  * Setting the SLEEP bit in the register puts the device into very low power
@@ -2925,6 +2924,20 @@ int16_t MPU6050::getZGyroOffset() {
 void MPU6050::setZGyroOffset(int16_t offset) {
     writeWord(devAddr, MPU6050_RA_ZG_OFFS_USRH, offset);
 }
+
+void MPU6050::getOffsets(int16_t offsets[6]) {
+    readBytes(devAddr, MPU6050_RA_XA_OFFS_H, 6, buffer);
+    readBytes(devAddr, MPU6050_RA_XG_OFFS_USRH, 6, buffer+6);
+    for (int i=0;i<6;i++) {
+        offset[i] = (((int16_t)buffer[2*i]) << 8) | buffer[2*i+1];
+    }   
+}
+
+void MPU6050::setOffsets(const int16_t offsets[6]) {
+    writeWords(devAddr, MPU6050_RA_XA_OFFS_H, 3, offsets);
+    writeWords(devAddr, MPU6050_RA_XG_OFFS_USRH, 3, offsets+3);
+}
+    
 
 // INT_ENABLE register (DMP functions)
 
