@@ -1,6 +1,8 @@
 #ifndef _STATUS_H_
 #define _STATUS_H_
 
+#include "RTMath.h"
+
 struct statusContainer
 {
         // GY87 raw data
@@ -13,7 +15,10 @@ struct statusContainer
         float sonicVelocity;
         float baroAltitude;
 
-        // 
+        // Calibrated data from calibrator
+        RTVector3 accCal;
+        RTVector3 gyroCal;
+        RTVector3 compassCal;
 
 
 

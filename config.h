@@ -2,7 +2,7 @@
 #define _CONFIG_ADC_
 
 #include <iostream>
-#include "GY87.h"
+#include "sensors/GY87.h"
 
 class configuration
 {
@@ -21,6 +21,12 @@ class configuration
 
         uint8_t HMC5883LSampleAveraging = HMC5883L_AVERAGING_8;
         uint8_t HMC5883LDataRate = HMC5883L_RATE_75;
+
+        // Caliberator
+        uint8_t axisRotation = 1;
+        bool calibrateCompass = true;
+        float calibrateCompassMax[3];
+        float calibrateCompassMin[3];
 
         // Altitude filter
         float baroFilterConfig[3] = {0.55, 1.0, 0.05};
