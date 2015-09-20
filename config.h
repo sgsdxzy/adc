@@ -2,17 +2,25 @@
 #define _CONFIG_ADC_
 
 #include <iostream>
+#include "GY87.h"
 
 class configuration
 {
     public:
         // System
-        float dt = 0.01; // System frequency
+        float dt = 0.005; // in seconds
         float g = 9.80151; // Beijing
         float seaLevelPressure = 101500;
 
         // GY87
-        int16_t gy87Offset[6] = {-1685, 3937, 1803, 0, -17, 109};
+        uint8_t MPU6050DLPFMode = MPU6050_DLPF_BW_42;
+        int16_t MPU6050Rate = 200;
+        uint8_t MPU6050GyroFsr = MPU6050_GYRO_FS_2000;
+        uint8_t MPU6050AccelFSr = MPU6050_ACCEL_FS_2;
+        int16_t MPU6050Offsets[6] = {-1685, 3937, 1803, 0, -17, 109};
+
+        uint8_t HMC5883LSampleAveraging = HMC5883L_AVERAGING_8;
+        uint8_t HMC5883LDataRate = HMC5883L_RATE_75;
 
         // Altitude filter
         float baroFilterConfig[3] = {0.55, 1.0, 0.05};

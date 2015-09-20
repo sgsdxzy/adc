@@ -1780,7 +1780,7 @@ bool MPU6050::getIntDataReadyStatus() {
  * @see getRotation()
  * @see MPU6050_RA_ACCEL_XOUT_H
  */
-void MPU6050::getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz) {
+void MPU6050::getMotion9(float* ax, float* ay, float* az, float* gx, float* gy, float* gz, float* mx, float* my, float* mz) {
     readBytes(devAddr, MPU6050_RA_ACCEL_XOUT_H, 20, buffer);
     *ax = -((((int16_t)buffer[0]) << 8) | buffer[1]) * accelScale;
     *ay =  ((((int16_t)buffer[2]) << 8) | buffer[3]) * accelScale;
@@ -1794,6 +1794,41 @@ void MPU6050::getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int
     *my = -((((int16_t)buffer[18]) << 8) | buffer[19]) * compassScale;
     *mz = -((((int16_t)buffer[16]) << 8) | buffer[17]) * compassScale;
 }
+
+/** Get raw 10-axis motion sensor readings (accel/gyro/compass).
+ * FUNCTION NOT FULLY IMPLEMENTED YET.
+ * @param ax 16-bit signed integer container for accelerometer X-axis value
+ * @param ay 16-bit signed integer container for accelerometer Y-axis value
+ * @param az 16-bit signed integer container for accelerometer Z-axis value
+ * @param gx 16-bit signed integer container for gyroscope X-axis value
+ * @param gy 16-bit signed integer container for gyroscope Y-axis value
+ * @param gz 16-bit signed integer container for gyroscope Z-axis value
+ * @param mx 16-bit signed integer container for magnetometer X-axis value
+ * @param my 16-bit signed integer container for magnetometer Y-axis value
+ * @param mz 16-bit signed integer container for magnetometer Z-axis value
+ * @see getMotion6()
+ * @see getAcceleration()
+ * @see getRotation()
+ * @see MPU6050_RA_ACCEL_XOUT_H
+ */
+void MPU6050::getMotion10(float acc[3], float gyro[3], float compass[3], float* temp) {
+    readBytes(devAddr, MPU6050_RA_ACCEL_XOUT_H, 20, buffer);
+
+    acc[0] = -((((int16_t)buffer[0]) << 8) | buffer[1]) * accelScale;
+    acc[1] =  ((((int16_t)buffer[2]) << 8) | buffer[3]) * accelScale;
+    acc[2] =  ((((int16_t)buffer[4]) << 8) | buffer[5]) * accelScale;
+
+    gyro[0] =  ((((int16_t)buffer[8]) << 8) | buffer[9])   * gyroScale;
+    gyro[1] = -((((int16_t)buffer[10]) << 8) | buffer[11]) * gyroScale;
+    gyro[2] = -((((int16_t)buffer[12]) << 8) | buffer[13]) * gyroScale;
+
+    compass[0] =  ((((int16_t)buffer[14]) << 8) | buffer[15]) * compassScale;
+    compass[1] = -((((int16_t)buffer[18]) << 8) | buffer[19]) * compassScale;
+    compass[2] = -((((int16_t)buffer[16]) << 8) | buffer[17]) * compassScale;
+
+    *temp = (float)((((int16_t)buffer[6]) << 8) | buffer[7]) / 340.0 + 36.53;
+}
+
 /** Get raw 6-axis motion sensor readings (accel/gyro).
  * Retrieves all currently available motion sensor values.
  * @param ax 16-bit signed integer container for accelerometer X-axis value
@@ -1806,7 +1841,7 @@ void MPU6050::getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int
  * @see getRotation()
  * @see MPU6050_RA_ACCEL_XOUT_H
  */
-void MPU6050::getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz) {
+void MPU6050::getMotion6(float* ax, float* ay, float* az, float* gx, float* gy, float* gz) {
     readBytes(devAddr, MPU6050_RA_ACCEL_XOUT_H, 14, buffer);
     *ax = -((((int16_t)buffer[0]) << 8) | buffer[1]) * accelScale;
     *ay =  ((((int16_t)buffer[2]) << 8) | buffer[3]) * accelScale;

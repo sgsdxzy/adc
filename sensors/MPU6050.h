@@ -621,6 +621,7 @@ class MPU6050 {
 
         // ACCEL_*OUT_* registers
         void getMotion9(float* ax, float* ay, float* az, float* gx, float* gy, float* gz, float* mx, float* my, float* mz);
+        void getMotion10(float acc[3], float gyro[3], float compass[3], float* temp);
         void getMotion6(float* ax, float* ay, float* az, float* gx, float* gy, float* gz);
         void getAcceleration(int16_t* x, int16_t* y, int16_t* z);
         int16_t getAccelerationX();
