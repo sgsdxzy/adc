@@ -77,7 +77,7 @@ void GY87::reset()
 
 void GY87::getData(statusContainer* status)
 {
-    mpu.getMotion10(status->accRaw, status->gyroRaw, status->compassRaw, &status->temperature); 
+    mpu.getMotion10((float[3])status->accRaw.data(), (float[3])status->gyroRaw.data(), (float[3])status->compassRaw.data(), &status->temperature); 
     status->pressure = bmp.getPressure();
 
     // Set pressure mesurement here so we can read data in next getData

@@ -2,7 +2,10 @@
 #define _CONFIG_ADC_
 
 #include <iostream>
+#include <Eigen/Dense>
 #include "sensors/GY87.h"
+
+using namespace Eigen;
 
 class configuration
 {
@@ -23,14 +26,19 @@ class configuration
         uint8_t HMC5883LDataRate = HMC5883L_RATE_75;
 
         // Caliberator
-        uint8_t axisRotation = 1;
-        bool calibrateCompass = true;
-        float calibrateCompassMax[3];
-        float calibrateCompassMin[3];
+        Matrix3f axisRotationMatrix;
 
-        // Altitude filter
-        float baroFilterConfig[3] = {0.55, 1.0, 0.05};
-        float sonarFilterConfig[3] = {0.75, 1.0, 0.035};
+        bool calibrateCompass = true;
+        Vector3f calibrateCompassMax;
+        Vector3f calibrateCompassMin;
+        bool calibrateCompassEllipsoid = true;
+        Vector3f calibrateCompassEllipsoidOffset;
+        Matrix3f calibrateCompassEllipsoidMatrix;
+
+        bool calibrateAccel = true;
+        float calibrateAccelMin[3];
+        float calibrateAccelMax[3];
+
 
         // ESC controller
         int controlled_esc[4] = {6, 13, 19, 26};

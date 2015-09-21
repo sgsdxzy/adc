@@ -1,14 +1,16 @@
 #ifndef _STATUS_H_
 #define _STATUS_H_
 
-#include "RTMath.h"
+#include <Eigen/Dense>
+
+using namespace Eigen;
 
 struct statusContainer
 {
         // GY87 raw data
-        float accRaw[3]; // [ax, ay, az]
-        float gyroRaw[3]; // [gx, gy, gz]
-        float compassRaw[3]; // [mx, my, mz]
+        Vector3f accRaw;
+        Vector3f gyroRaw;
+        Vector3f compassRaw;
         float temperature;
         float pressure;
         // GY87 caulculated data
@@ -16,9 +18,9 @@ struct statusContainer
         float baroAltitude;
 
         // Calibrated data from calibrator
-        RTVector3 accCal;
-        RTVector3 gyroCal;
-        RTVector3 compassCal;
+        Vector3f accCal;
+        Vector3f gyroCal;
+        Vector3f compassCal;
 
 
 
