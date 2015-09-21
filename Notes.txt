@@ -1,4 +1,0 @@
-GY87 is at 100Hz
-BMP180 is at most 40ms, so choose 20-25Hz
-Servo accepts up to 490Hz, but 100Hz should be enough
-PID system should run at 100Hz
