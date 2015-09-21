@@ -1,6 +1,6 @@
-#include "calibrator.h"
+#include "Calibrator.h"
 
-void Calibrator::initialize(configuration* config)
+void Calibrator::initialize(Configuration* config)
 {
     // Copy configs
     axisRotationMatrix = config->axisRotationMatrix;
@@ -11,6 +11,7 @@ void Calibrator::initialize(configuration* config)
     compassCalEllipsoidMarix = config->calibrateCompassEllipsoidMatrix;
 
     calibrateAccel = config->calibrateAccel;
+
     if (calibrateAccel) {
         for (int i=0;i<3;i++) {
             accCalMin[i] = config->calibrateAccelMin[i];
@@ -38,7 +39,7 @@ void Calibrator::initialize(configuration* config)
     gyroContinuousAlpha = 0.01f / config->MPU6050Rate;
 }
 
-void Calibrator::calibrate(statusContainer* status)
+void Calibrator::calibrate(Status* status)
 {
     int i;
 

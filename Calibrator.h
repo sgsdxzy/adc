@@ -1,16 +1,16 @@
-#ifndef _CALIBRATOR_
-#define _CALIBRATOR_
+#ifndef _CALIBRATOR_H_
+#define _CALIBRATOR_H_
 
 #include <Eigen/Dense>
-#include "config.h"
-#include "status.h"
+#include "Configuration.h"
+#include "Status.h"
 
 using namespace Eigen;
 
 class Calibrator
 {
     public:
-         void initialize(configuration* config);
+         void initialize(Configuration* config);
 
         /* All-in-one calibrator, doing the following four:
          * First thing to call after getting data from IMU
@@ -19,7 +19,7 @@ class Calibrator
         void calibrateGyro(statusContainer* status)
         void calibrateAcceleration(statusContainer* status);
         */
-        void calibrate(statusContainer* status);
+        void calibrate(Status* status);
 
 
     private:
@@ -45,4 +45,4 @@ class Calibrator
         float gyroContinuousAlpha;
 };
 
-#endif // _CALIBRATOR_
+#endif // _CALIBRATOR_H_

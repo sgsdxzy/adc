@@ -1,5 +1,5 @@
-#ifndef _CONFIG_ADC_
-#define _CONFIG_ADC_
+#ifndef _CONFIGURATION_ADC_H_
+#define _CONFIGURATION_ADC_H_
 
 #include <iostream>
 #include <Eigen/Dense>
@@ -7,7 +7,7 @@
 
 using namespace Eigen;
 
-class configuration
+class Configuration
 {
     public:
         // System
@@ -78,4 +78,4 @@ using std::endl;
 std::ostream& operator<<(std::ostream& stream, configuration const& data);
 std::istream& operator>>(std::istream& stream, configuration& data);
 
-#endif // _CONFIG_ADC_
+#endif // _CONFIGURATION_ADC_H_

@@ -4,7 +4,7 @@
 #include <atomic>
 #include <cmath>
 #include <pthread.h>
-#include "status.h"
+#include "Status.h"
 
 #define PID_RATE 0
 #define PID_ATTITUDE 1

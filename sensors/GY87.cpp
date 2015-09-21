@@ -1,6 +1,6 @@
 #include "GY87.h"
 
-void GY87::initialize(configuration* config)
+void GY87::initialize(Configuration* config)
 {
     // Setting MPU6050
     if (!mpu.testConnection()) {
@@ -75,7 +75,7 @@ void GY87::reset()
     mpu.reset();
 }
 
-void GY87::getData(statusContainer* status)
+void GY87::getData(Status* status)
 {
     mpu.getMotion10((float[3])status->accRaw.data(), (float[3])status->gyroRaw.data(), (float[3])status->compassRaw.data(), &status->temperature); 
     status->pressure = bmp.getPressure();

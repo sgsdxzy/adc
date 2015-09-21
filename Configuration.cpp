@@ -1,4 +1,4 @@
-#include "config.h"
+#include "Configuration.h"
 
 ostream& operator<<(ostream& stream, configuration const& config)
 {

@@ -5,19 +5,19 @@
 #include "MPU6050.h"
 #include "HMC5883L.h"
 #include "BMP085.h"
-#include "../config.h"
-#include "../debug.h"
-#include "../status.h"
+#include "../Configuration.h"
+#include "../Status.h"
+#include "../Debug.h"
 
 class GY87 {
     public:
         GY87() {};
 
-        void initialize(configuration* conf);
+        void initialize(Configuration* config);
         bool testConnection();
         void reset();
 
-        void getData(statusContainer* status);
+        void getData(Status* status);
 
         float seaLevelPressure;
 

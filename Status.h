@@ -5,7 +5,7 @@
 
 using namespace Eigen;
 
-struct statusContainer
+struct Status
 {
         // GY87 raw data
         Vector3f accRaw;
@@ -21,7 +21,6 @@ struct statusContainer
         Vector3f accCal;
         Vector3f gyroCal;
         Vector3f compassCal;
-
 
 
         float attitude[3]; // [Yaw, pitch, roll]
