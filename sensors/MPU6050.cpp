@@ -1814,9 +1814,9 @@ void MPU6050::getMotion9(float* ax, float* ay, float* az, float* gx, float* gy, 
 void MPU6050::getMotion10(float acc[3], float gyro[3], float compass[3], float* temp) {
     readBytes(devAddr, MPU6050_RA_ACCEL_XOUT_H, 20, buffer);
 
-    acc[0] = -((((int16_t)buffer[0]) << 8) | buffer[1]) * accelScale;
-    acc[1] =  ((((int16_t)buffer[2]) << 8) | buffer[3]) * accelScale;
-    acc[2] =  ((((int16_t)buffer[4]) << 8) | buffer[5]) * accelScale;
+    acc[0] =  ((((int16_t)buffer[0]) << 8) | buffer[1]) * accelScale;
+    acc[1] = -((((int16_t)buffer[2]) << 8) | buffer[3]) * accelScale;
+    acc[2] = -((((int16_t)buffer[4]) << 8) | buffer[5]) * accelScale;
 
     gyro[0] =  ((((int16_t)buffer[8]) << 8) | buffer[9])   * gyroScale;
     gyro[1] = -((((int16_t)buffer[10]) << 8) | buffer[11]) * gyroScale;
