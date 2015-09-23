@@ -824,7 +824,7 @@ class MPU6050 {
         uint8_t getDMPConfig2();
         void setDMPConfig2(uint8_t config);
 
-        float compassScale = 1/1090;
+        float compassScale = 1/1090 * 100; // in uT
 
     private:
         uint8_t devAddr;
