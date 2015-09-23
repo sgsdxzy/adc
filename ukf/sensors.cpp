@@ -51,16 +51,16 @@ const MeasurementVector &mean) {
 
 
 /* Calculates the current size of the measurement vector. */
-size_t IOBoardModel::size() const {
+size_t AriaModel::size() const {
     size_t i = 0;
 
-    i += flags.accelerometer ? 6 : 0;
-    i += flags.gyroscope ? 3 : 0;
-    i += flags.magnetometer ? 3 : 0;
-    i += flags.gps_position ? 3 : 0;
-    i += flags.gps_velocity ? 3 : 0;
-    i += flags.pitot_tas ? 1 : 0;
-    i += flags.barometer_amsl ? 1 : 0;
+    i += status->acc ? 6 : 0;
+    i += status->gyro ? 3 : 0;
+    i += status->compass ? 3 : 0;
+    i += status->GPSP ? 3 : 0;
+    i += status->gpsv ? 3 : 0;
+    i += status->baro ? 1 : 0;
+    i += status->sonar ? 1 : 0;
 
     return i;
 }
@@ -69,48 +69,49 @@ size_t IOBoardModel::size() const {
 /*
 Takes all populated sensor data and puts it into a vector for use by the UKF.
 */
-MeasurementVector IOBoardModel::collate() const {
+MeasurementVector AriaModel::collate() const {
     MeasurementVector::Index max_size = (MeasurementVector::Index)size();
     MeasurementVector::Index i = 0;
-    if(flags.accelerometer) {
+    if(status->acc) {
         max_size -= 3;
     }
     MeasurementVector measurement(max_size);
 
-    if(flags.accelerometer) {
-        measurement.segment<3>(i) << accelerometer.data;
+    if(status->acc) {
+        measurement.segment<3>(i) << status->accCal;
         i += 3;
     }
 
-    if(flags.gyroscope) {
-        measurement.segment<3>(i) << gyroscope.data;
+    if(status->gyro) {
+        measurement.segment<3>(i) << status->gyroCal;
         i += 3;
     }
 
-    if(flags.magnetometer) {
-        measurement.segment<3>(i) << magnetometer.data;
+    if(status->compass) {
+        measurement.segment<3>(i) << status->compassCal;
         i += 3;
     }
 
-    if(flags.gps_position) {
-        measurement.segment<3>(i) << gps_position;
+    if(status->GPSP) {
+        measurement.segment<3>(i) << status->GPSPposition;
         i += 3;
     }
 
-    if(flags.gps_velocity) {
-        measurement.segment<3>(i) << gps_velocity;
+    if(status->GPSV) {
+        measurement.segment<3>(i) << status->GPSVelocity;
         i += 3;
     }
 
-    if(flags.pitot_tas) {
-        measurement[i] = pitot_tas;
+    if(status->baro) {
+        measurement[i] = status->baroAltitude;
         i++;
     }
 
-    if(flags.barometer_amsl) {
-        measurement[i] = barometer_amsl;
+    if(status->sonar) {
+        measurement[i] = status->sonarDistance;
         i++;
     }
+
 
     return measurement;
 }
@@ -120,16 +121,13 @@ MeasurementVector IOBoardModel::collate() const {
 Takes a state vector and creates a predicted measurement vector containing
 only the sensor values which have been supplied.
 */
-MeasurementVector IOBoardModel::predict(const State &in) const {
+MeasurementVector AriaModel::predict(const State &in) const {
     MeasurementVector::Index max_size = (MeasurementVector::Index)size();
     MeasurementVector::Index i = 0;
     MeasurementVector predicted(max_size);
     Quaternionr attitude = Quaternionr(in.attitude());
 
     AssertNormalized(attitude);
-    AssertNormalized(accelerometer.orientation);
-    AssertNormalized(gyroscope.orientation);
-    AssertNormalized(magnetometer.orientation);
 
     /*
     The accelerometer reading is predicted by adding the expected gravity
@@ -137,14 +135,12 @@ MeasurementVector IOBoardModel::predict(const State &in) const {
     Also, if the offset vector is non-zero, need to include the angular
     acceleration term and the centripetal acceleration term.
     */
-    if(flags.accelerometer) {
-        predicted.segment<3>(i) << accelerometer.orientation *
-            (in.acceleration() +
-             in.angular_acceleration().cross(accelerometer.offset) +
-             in.angular_velocity().cross(in.angular_velocity().cross(
-                accelerometer.offset)));
-        predicted.segment<3>(i+3) << accelerometer.orientation *
-            (attitude * Vector3r(0, 0, -G_ACCEL));
+    if(status->acc) {
+        predicted.segment<3>(i) << in.acceleration() +
+            in.angular_acceleration().cross(accelerometer_offset) +
+            in.angular_velocity().cross(in.angular_velocity().cross(
+                        accelerometer.offset));
+        predicted.segment<3>(i+3) << attitude * Vector3r(0, 0, -G_ACCEL);
         i += 6;
     }
 
@@ -152,9 +148,8 @@ MeasurementVector IOBoardModel::predict(const State &in) const {
     The gyroscope reading is simply the angular velocity transformed by the
     sensor orientation.
     */
-    if(flags.gyroscope) {
-        predicted.segment<3>(i) << gyroscope.orientation *
-            (in.angular_velocity() + in.gyro_bias());
+    if(status->gyro) {
+        predicted.segment<3>(i) << in.angular_velocity() + in.gyro_bias();
         i += 3;
     }
 
@@ -164,16 +159,15 @@ MeasurementVector IOBoardModel::predict(const State &in) const {
     convert the magnetic field vector into the body frame, and also adjust by
     the orientation vector.
     */
-    if(flags.magnetometer) {
-        predicted.segment<3>(i) << magnetometer.orientation *
-            (attitude * magnetometer.field);
+    if(status->compass) {
+        predicted.segment<3>(i) << attitude * magnetic_field;
         i += 3;
     }
 
     /*
     GPS position prediction is the previous estimate's lat/lon/alt.
     */
-    if(flags.gps_position) {
+    if(status->GPSP) {
         predicted.segment<3>(i) << in.position();
         i += 3;
     }
@@ -181,73 +175,71 @@ MeasurementVector IOBoardModel::predict(const State &in) const {
     /*
     GPS velocity prediction is just the previous estimate's NED velocity.
     */
-    if(flags.gps_velocity) {
+    if(status->GPSV) {
         predicted.segment<3>(i) << in.velocity();
         i += 3;
-    }
-
-    /*
-    The true airspeed is predicted by subtracting the wind velocity from the
-    ECEF velocity, transforming it into body frame and then taking the +X
-    component.
-    */
-    if(flags.pitot_tas) {
-        Vector3r temp_3d = attitude * (in.velocity() - in.wind_velocity());
-        predicted[i] = temp_3d[0];
-        i++;
     }
 
     /*
     The barometric altitude prediction is just the height from the state
     vector position.
     */
-    if(flags.barometer_amsl) {
+    if(status->baro) {
         predicted[i] = in.position()[2];
+        i++;
+    }
+
+    /*
+    The sonar distance is the previous estimate's distance projected into body frame
+    */
+    if(status->sonar) {
+        Vector3r unitZ(0, 0, 1);
+        predicted[i] = in.sonar_ground() / (attitude * unitZ)(2);
         i++;
     }
 
     return predicted;
 }
 
-MeasurementVector IOBoardModel::get_covariance() const {
+MeasurementVector AriaModel::get_covariance() const {
     MeasurementVector::Index max_size = (MeasurementVector::Index)size();
     MeasurementVector::Index i = 0;
-    if(flags.accelerometer) {
+    if(status->acc) {
         max_size -= 3;
     }
     MeasurementVector out_covariance(max_size);
 
-    if(flags.accelerometer) {
+    if(status->acc) {
         out_covariance.segment<3>(i) << covariance.segment<3>(0);
         i += 3;
     }
 
-    if(flags.gyroscope) {
+    if(status->gyro) {
         out_covariance.segment<3>(i) << covariance.segment<3>(3);
         i += 3;
     }
 
-    if(flags.magnetometer) {
+    if(status->compass) {
         out_covariance.segment<3>(i) << covariance.segment<3>(6);
         i += 3;
     }
 
-    if(flags.gps_position) {
+    if(status->GPSP) {
         out_covariance.segment<3>(i) << covariance.segment<3>(9);
         i += 3;
     }
 
-    if(flags.gps_velocity) {
+    if(status->GPSV) {
         out_covariance.segment<3>(i) << covariance.segment<3>(12);
         i += 3;
     }
 
-    if(flags.pitot_tas) {
+    if(status->baro) {
         out_covariance[i] = covariance[15];
         i++;
     }
 
-    if(flags.barometer_amsl) {
+    if(status->sonar) {
         out_covariance[i] = covariance[16];
         i++;
     }
@@ -262,7 +254,7 @@ gravitational acceleration and the magnetometer value, then add the
 gravitational acceleration to the kinematic acceleration to get the expected
 accelerometer measurement.
 */
-MeasurementVector IOBoardModel::calculate_mean(
+MeasurementVector AriaModel::calculate_mean(
 const MatrixXr &in,
 const VectorXr &weights) {
     MeasurementVector::Index max_size = (MeasurementVector::Index)size();
@@ -275,7 +267,7 @@ const VectorXr &weights) {
     /* Calculate the mean. */
     MeasurementVector initial_mean = in * weights;
 
-    if(flags.accelerometer) {
+    if(status->acc) {
         /*
         Normalise the gravitational acceleration, and add the gravitational
         and kinematic accelerations.
@@ -288,13 +280,13 @@ const VectorXr &weights) {
         j += 6;
     }
 
-    if(flags.gyroscope) {
+    if(status->gyro) {
         mean.segment<3>(i) << initial_mean.segment<3>(j);
         i += 3;
         j += 3;
     }
 
-    if(flags.magnetometer) {
+    if(status->compass) {
         /* Normalise the magnetometer. */
         mean.segment<3>(i) << initial_mean.segment<3>(j).normalized() *
             magnetometer.field.norm();
@@ -302,25 +294,25 @@ const VectorXr &weights) {
         j += 3;
     }
 
-    if(flags.gps_position) {
+    if(status->GPSP) {
         mean.segment<3>(i) << initial_mean.segment<3>(j);
         i += 3;
         j += 3;
     }
 
-    if(flags.gps_velocity) {
+    if(status->GPSV) {
         mean.segment<3>(i) << initial_mean.segment<3>(j);
         i += 3;
         j += 3;
     }
 
-    if(flags.pitot_tas) {
+    if(status->baro) {
         mean[i] = initial_mean[j];
         i++;
         j++;
     }
 
-    if(flags.barometer_amsl) {
+    if(status->sonar) {
         mean[i] = initial_mean[j];
         i++;
         j++;
@@ -334,13 +326,13 @@ This is specialised because we have to add the gravitational acceleration to
 the kinematic acceleration in the sigma points before subtracting the mean
 from them.
 */
-MatrixXr IOBoardModel::calculate_deltas(
+MatrixXr AriaModel::calculate_deltas(
 const MatrixXr &in,
 const MeasurementVector &mean) {
     MatrixXr deltas;
     MeasurementVector::Index max_size = (MeasurementVector::Index)in.rows();
 
-    if(flags.accelerometer) {
+    if(config->acc) {
         max_size -= 3;
         deltas = MatrixXr(max_size, in.cols());
 

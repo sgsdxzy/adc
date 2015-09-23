@@ -24,8 +24,8 @@ SOFTWARE.
 #define CONFIG_H_
 
 /* Uncomment one of the following to select the float-point precision */
-/* #define UKF_SINGLE_PRECISION */
-#define UKF_DOUBLE_PRECISION
+#define UKF_SINGLE_PRECISION
+/* #define UKF_DOUBLE_PRECISION */
 
 /*
 Choose the integration method here:
@@ -44,7 +44,7 @@ than UKF_STATE_DIM, as the attitude is stored as a quaternion.
 */
 
 #define UKF_CONTROL_DIM 4
-#define UKF_STATE_DIM 24
-#define UKF_MEASUREMENT_DIM 20
+#define UKF_STATE_DIM 22
+#define UKF_MEASUREMENT_DIM 17
 
 #endif

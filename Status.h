@@ -22,24 +22,25 @@ struct Status
         Vector3f gyroCal;
         Vector3f compassCal;
 
+        // TODO get these data
+        Vector3f GPSPosition;
+        Vector3f GPSVelocity;
+        float sonarDistance;
 
-        float attitude[3]; // [Yaw, pitch, roll]
-        float heading;          // Magnetic heading.
-        float gyroscope[3]; // Gyroscope data [gx, gy, gz]
-        float gravity[3]; // Gravity's component along each axis, normalized to 1
-        float accRelative[3]; // axRelative, ayRelative, azRelative;
-        float accAbsolute[3]; // axAbsolute, ayAbsolute, azAbsolute;
-
-        // HC-SR04+
-        float sonarAltitude;
-        bool sonar; // Indicate whether sonar is in working range
+        // Device data sanity checker and validator
+        bool acc = true;
+        bool gyro = true;
+        bool compass = true;
+        bool baro = true;
+        bool GPSP = false;
+        bool GPSV = false;
+        bool sonar = false;
 
         // Optical flow
         // std::atomic<float> opticalVelocity[2]; // [vx, vy]
 
         // Starting conditions
         float startAttitude[3]; // [Yaw, pitch, roll]
-        float startHeading;
         float startAltitude;
 };
 

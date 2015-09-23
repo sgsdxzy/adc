@@ -39,6 +39,7 @@ class Configuration
         float calibrateAccelMin[3];
         float calibrateAccelMax[3];
 
+        // FusionFilter
 
         // ESC controller
         int controlled_esc[4] = {6, 13, 19, 26};

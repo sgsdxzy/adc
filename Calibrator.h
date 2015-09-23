@@ -23,10 +23,11 @@ class Calibrator
 
 
     private:
+        float g;
         Matrix3f axisRotationMatrix;
         int16_t sampleRateCount;
 
-        Vector3f compassAverage = Vector3f::Zero();
+        // Vector3f compassAverage = Vector3f::Zero();
         bool calibrateCompass = false;
         float compassCalScale[3];
         Vector3f compassCalOffset = Vector3f::Zero();

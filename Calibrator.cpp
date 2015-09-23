@@ -3,6 +3,8 @@
 void Calibrator::initialize(Configuration* config)
 {
     // Copy configs
+    g = config->g;
+
     axisRotationMatrix = config->axisRotationMatrix;
 
     calibrateCompass = config->calibrateCompass;
@@ -36,7 +38,7 @@ void Calibrator::initialize(Configuration* config)
     }
 
     gyroLearningAlpha = 2.0f / config->MPU6050Rate;
-    gyroContinuousAlpha = 0.01f / config->MPU6050Rate;
+    gyroContinuousAlpha = 0.001f / config->MPU6050Rate;
 }
 
 void Calibrator::calibrate(Status* status)
@@ -58,6 +60,8 @@ void Calibrator::calibrate(Status* status)
             }
         }
     }
+    // Get results in m/s^2
+    status->accCal *= g;
    
     // Handle gyro bias
     Vector3f deltaAccel = status->accCal - previousAccel;
@@ -90,6 +94,6 @@ void Calibrator::calibrate(Status* status)
         }
     }
     // update running average
-    compassAverage = status->compassCal * 0.2f + compassAverage * (1.0 - 0.2f); // 0.2 recommanded by RTIMULib
-    status->compassCal = compassAverage;
+    // compassAverage = status->compassCal * 0.2f + compassAverage * (1.0 - 0.2f); // 0.2 recommanded by RTIMULib
+    // status->compassCal = compassAverage;
 }

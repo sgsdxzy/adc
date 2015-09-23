@@ -23,6 +23,7 @@ SOFTWARE.
 #ifndef SENSORS_H
 #define SENSORS_H
 
+#include "../Status.h"
 #include "types.h"
 #include "state.h"
 
@@ -54,8 +55,8 @@ public:
 };
 
 /*
-Sensor model including accelerometer, magnetometer, gyro, gps, pitot,
-barometric pressure and derivative of barometric pressure.
+Sensor model including accelerometer, magnetometer, gyro, gps, 
+barometric pressure and sonar.
 Contents of returned vector are as follows (when all sensor data is
 populated):
     - Accelerometer (3-vector, m/s^2)
@@ -63,35 +64,30 @@ populated):
     - Magnetometer (3-vector, µT, body frame)
     - GPS position (3-vector, latitude (rad), longitude (rad), altitude (m))
     - GPS NED velocity (3-vector, m/s)
-    - Pitot true airspeed (scalar, m/s)
     - Barometer altitude AMSL (scalar, m)
+    - Sonar distance (scalar, m)
 
 NOTE: The 'field' vector in the magnetometer struct should be set to the
 magnetic field vector at the current position, in the ECEF reference frame.
 */
-class IOBoardModel: public SensorModel {
+class AriaModel: public SensorModel {
     /* Sensor data and parameters. */
-    struct {
-        Quaternionr orientation;
-        Vector3r data;
-        Vector3r offset;
-    } accelerometer;
+    /* All stored in status */
+    Status* status;
 
-    struct {
-        Quaternionr orientation;
-        Vector3r data;
-    } gyroscope;
+    Vector3r accelerometer_offset;
+    Vector3r magnetic_field;
+    /*
+    Vector3r accelerometer;
+    Vector3r gyroscope;
 
-    struct {
-        Quaternionr orientation;
-        Vector3r data;
-        Vector3r field;
-    } magnetometer;
+    Vector3r magnetometer;
 
     Vector3r gps_position;
     Vector3r gps_velocity;
-    real_t pitot_tas;
     real_t barometer_amsl;
+    real_t sonar_distance;
+    */
 
     /*
     Stores sensor noise covariance, in the following order:
@@ -100,37 +96,33 @@ class IOBoardModel: public SensorModel {
         - Magnetometer (3-vector)
         - GPS Position (3-vector)
         - GPS Velocity (3-vector)
-        - Pitot TAS (scalar)
         - Barometer AMSL (scalar)
+        - Sonar distance (scalar)
     */
     MeasurementVector covariance;
 
     /* Sensor flags. */
+    /* Also included in status
     struct {
         bool accelerometer : 1;
         bool gyroscope : 1;
         bool magnetometer : 1;
         bool gps_position : 1;
         bool gps_velocity : 1;
-        bool pitot_tas : 1;
         bool barometer_amsl : 1;
+        bool sonar_distance : 1;
     } flags;
+    */
 
 public:
-    IOBoardModel(Quaternionr accelerometer_orientation,
-                 Vector3r accelerometer_offset,
-                 Quaternionr gyroscope_orientation,
-                 Quaternionr magnetometer_orientation,
-                 Vector3r magnetic_field) {
-        accelerometer.orientation = accelerometer_orientation;
-        accelerometer.offset = accelerometer_offset;
-        gyroscope.orientation = gyroscope_orientation;
-        magnetometer.orientation = magnetometer_orientation;
-        magnetometer.field = magnetic_field;
+    AriaModel(Status* status, Vector3r accelerometer_offset, Vector3r magnetic_field) {
+        this->status = status;
+        this->accelerometer_offset = accelerometer_offset;
+        this->magnetic_field = magnetic_field;
         covariance = MeasurementVector::Constant(UKF_MEASUREMENT_DIM, 1, (real_t)1);
-        clear();
+        // clear();
     }
-    void clear() { memset(&flags, 0, sizeof(flags)); }
+    // void clear() { memset(&flags, 0, sizeof(flags)); }
     size_t size() const;
     MeasurementVector collate() const;
     MeasurementVector predict(const State &in) const;
@@ -145,6 +137,8 @@ public:
     MatrixXr calculate_deltas(
         const MatrixXr &in,
         const MeasurementVector &mean);
+
+    /*
     void set_accelerometer(Vector3r data) {
         accelerometer.data = data;
         flags.accelerometer = true;
@@ -176,6 +170,7 @@ public:
         gps_velocity = data;
         flags.gps_velocity = true;
     }
+    */
 };
 
 #endif

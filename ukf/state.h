@@ -35,8 +35,8 @@ Contents are as follows:
       frame to body frame.)
     - Angular Velocity (3-vector, rad/s, body frame)
     - Angular Acceleration (3-vector, rad/s^2, body frame)
-    - Wind Velocity (3-vector, m/s, NED frame)
     - Gyro bias (3-vector, rad/s, body frame)
+    - Sonar ground (distance to ground, scalar, m, NED frame)
 */
 class State: public StateVector {
 public:
@@ -80,13 +80,12 @@ public:
         return segment<3>(16);
     }
 
-    const Vector3r wind_velocity() const {
+    const Vector3r gyro_bias() const {
         return segment<3>(19);
     }
 
-    const Vector3r gyro_bias() const {
-        return segment<3>(22);
-    }
+    const float sonar_ground() const {
+        return (22)
 
     /* Mutable accessors */
     Eigen::VectorBlock<StateVector, 3> position() {
@@ -113,12 +112,12 @@ public:
         return segment<3>(16);
     }
 
-    Eigen::VectorBlock<StateVector, 3> wind_velocity() {
+    Eigen::VectorBlock<StateVector, 3> gyro_bias() {
         return segment<3>(19);
     }
 
-    Eigen::VectorBlock<StateVector, 3> gyro_bias() {
-        return segment<3>(22);
+    float& sonar_ground() {
+        return (22);
     }
 };
 

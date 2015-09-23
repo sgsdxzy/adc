@@ -37,8 +37,8 @@ Contents are as follows:
     - Rate of change in attitude (quaternion (x, y, z, w), 1/s, body frame)
     - Rate of change in angular velocity (3-vector, rad/s^2, body frame)
     - Rate of change in angular acceleration (3-vector, rad/s^3, body frame)
-    - Rate of change in wind velocity (3-vector, m/s, NED frame)
     - Rate of change in gyro bias (3-vector, rad/s^2, body frame)
+    - Rate of change in sonar ground (scalar, m/s, NED frame)
 */
 const StateVectorDerivative State::model() {
     StateVectorDerivative output;
@@ -83,11 +83,11 @@ const StateVectorDerivative State::model() {
     /* Change in angular acceleration is zero. */
     output.segment<3>(16) << 0, 0, 0;
 
-    /* Change in wind velocity is zero. */
+    /* Change in gyro bias is zero. */
     output.segment<3>(19) << 0, 0, 0;
 
-    /* Change in gyro bias is zero. */
-    output.segment<3>(22) << 0, 0, 0;
+    /* Chnage in sonar ground is negative velocity in NED frame. */
+    output(22) = -vel[2];
 
     return output;
 }
