@@ -68,11 +68,16 @@ class X8DynamicsModel: public DynamicsModel {
     /* Store inverse inertia tensor for performance */
     Matrix3x3r inertia_tensor_inv;
 
+    real_t g;
+
 public:
     X8DynamicsModel(void) {
         mass_inv = (real_t)1.0 / 3.8;
 
         Matrix3x3r inertia_tensor;
+
+        g = 9.80151;
+
         inertia_tensor <<
             3.0e-1, 0, -0.334e-1,
             0, 1.7e-1, 0,

@@ -53,6 +53,8 @@ sensor(sensor_model) {
     state = StateVector::Zero();
     state.attitude() << 0, 0, 0, 1;
 
+    process_noise_covariance.fill((real_t)1e-6);
+    /*
     process_noise_covariance <<
         (real_t)1e-6, (real_t)1e-6, (real_t)1e-6,
         (real_t)1e-6, (real_t)1e-6, (real_t)1e-6,
@@ -62,7 +64,7 @@ sensor(sensor_model) {
         (real_t)1e-6, (real_t)1e-6, (real_t)1e-6,
         (real_t)1e-6, (real_t)1e-6, (real_t)1e-6,
         (real_t)1e-6, (real_t)1e-6, (real_t)1e-6;
-
+    */
     state_covariance = StateCovariance::Zero();
     state_covariance.diagonal() <<
         (real_t)M_PI * (real_t)M_PI * (real_t)0.0625, (real_t)M_PI * (real_t)M_PI * (real_t)0.0625, 1000,
@@ -71,8 +73,8 @@ sensor(sensor_model) {
         (real_t)M_PI * (real_t)0.25, (real_t)M_PI * (real_t)0.25, (real_t)M_PI * (real_t)0.25,
         2, 2, 2,
         5, 5, 5,
-        20, 20, 20,
-        0, 0, 0;
+        0, 0, 0,
+        5;
     dynamics = NULL;
 }
 
@@ -119,7 +121,7 @@ void UnscentedKalmanFilter::create_sigma_points() {
         AssertNormalized(temp);
         sigma_points.col(i+1).segment<4>(9) << temp.vec(), temp.w();
         sigma_points.col(i+1).segment<12>(13) =
-            state.segment<12>(13) + S.col(i).segment<12>(12);
+            state.segment<UKF_STATE_DIM-12>(13) + S.col(i).segment<UKF_STATE_DIM-12>(12);
 
         /* Create negative sigma point. */
         sigma_points.col(i+1+UKF_STATE_DIM).segment<9>(0) =
@@ -129,7 +131,7 @@ void UnscentedKalmanFilter::create_sigma_points() {
         sigma_points.col(i+1+UKF_STATE_DIM).segment<4>(9) <<
             temp.vec(), temp.w();
         sigma_points.col(i+1+UKF_STATE_DIM).segment<12>(13) =
-            state.segment<12>(13) - S.col(i).segment<12>(12);
+            state.segment<UKF_STATE_DIM-12>(13) - S.col(i).segment<UKF_STATE_DIM-12>(12);
     }
 }
 
@@ -210,8 +212,8 @@ void UnscentedKalmanFilter::apriori_estimate(real_t dt, ControlVector c) {
     */
     w_prime.topRows<9>() = sigma_points.topRows<9>().colwise() -
         apriori_mean.segment<9>(0);
-    w_prime.bottomRows<12>() = sigma_points.bottomRows<12>().colwise() -
-        apriori_mean.segment<12>(13);
+    w_prime.bottomRows<UKF_STATE_DIM-12>() = sigma_points.bottomRows<UKF_STATE_DIM-12>().colwise() -
+        apriori_mean.segment<UKF_STATE_DIM-12>(13);
 
     /*
     The attitude part of this set of vectors is calculated using equation (45)
@@ -349,8 +351,8 @@ void UnscentedKalmanFilter::aposteriori_estimate() {
     /* The rest of the update step is very straightforward. */
     state.segment<9>(0) = apriori_mean.segment<9>(0) +
         update_temp.segment<9>(0);
-    state.segment<12>(13) = apriori_mean.segment<12>(13) +
-        update_temp.segment<12>(12);
+    state.segment<UKF_STATE_DIM-12>(13) = apriori_mean.segment<UKF_STATE_DIM-12>(13) +
+        update_temp.segment<UKF_STATE_DIM-12>(12);
 
     /*
     And the state covariance update from equation 75, no quaternion

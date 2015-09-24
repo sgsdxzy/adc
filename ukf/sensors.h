@@ -24,6 +24,7 @@ SOFTWARE.
 #define SENSORS_H
 
 #include "../Status.h"
+#include "../Configuration.h"
 #include "types.h"
 #include "state.h"
 
@@ -75,6 +76,7 @@ class AriaModel: public SensorModel {
     /* All stored in status */
     Status* status;
 
+    float g;
     Vector3r accelerometer_offset;
     Vector3r magnetic_field;
     /*
@@ -115,10 +117,11 @@ class AriaModel: public SensorModel {
     */
 
 public:
-    AriaModel(Status* status, Vector3r accelerometer_offset, Vector3r magnetic_field) {
+    AriaModel(Status* status, Configuration* config) {
         this->status = status;
-        this->accelerometer_offset = accelerometer_offset;
-        this->magnetic_field = magnetic_field;
+        this->g = config->g;
+        this->accelerometer_offset = config->accOffset;
+        this->magnetic_field = config->magneticField;
         covariance = MeasurementVector::Constant(UKF_MEASUREMENT_DIM, 1, (real_t)1);
         // clear();
     }

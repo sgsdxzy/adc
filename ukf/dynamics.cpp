@@ -132,7 +132,7 @@ const State &in, const ControlVector &control) const {
     /* Calculate linear acceleration (F / m) */
     AccelerationVector output;
     output.segment<3>(0) = sum_force * mass_inv +
-                           attitude * Vector3r(0, 0, G_ACCEL);
+                           attitude * Vector3r(0, 0, g);
 
     /* Calculate angular acceleration (tau / inertia tensor) */
     /*output.segment<3>(3) = inertia_tensor_inv * sum_torque;*/

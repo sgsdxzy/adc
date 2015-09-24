@@ -33,7 +33,7 @@ typedef float real_t;
 typedef double real_t;
 #endif
 
-#define G_ACCEL ((real_t)9.80151)
+// #define G_ACCEL ((real_t)9.80151) // in config
 #define RHO ((real_t)1.225)
 
 /* WGS84 reference ellipsoid constants */

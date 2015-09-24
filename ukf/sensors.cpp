@@ -140,7 +140,7 @@ MeasurementVector AriaModel::predict(const State &in) const {
             in.angular_acceleration().cross(accelerometer_offset) +
             in.angular_velocity().cross(in.angular_velocity().cross(
                         accelerometer.offset));
-        predicted.segment<3>(i+3) << attitude * Vector3r(0, 0, -G_ACCEL);
+        predicted.segment<3>(i+3) << attitude * Vector3r(0, 0, -g);
         i += 6;
     }
 
@@ -259,7 +259,7 @@ const MatrixXr &in,
 const VectorXr &weights) {
     MeasurementVector::Index max_size = (MeasurementVector::Index)size();
     MeasurementVector::Index i = 0, j = 0;
-    if(flags.accelerometer) {
+    if(status->acc) {
         max_size -= 3;
     }
     MeasurementVector mean(max_size);
@@ -273,7 +273,7 @@ const VectorXr &weights) {
         and kinematic accelerations.
         */
         mean.segment<3>(i) <<
-            (initial_mean.segment<3>(j+3).normalized() * G_ACCEL) +
+            (initial_mean.segment<3>(j+3).normalized() * g) +
             initial_mean.segment<3>(j);
 
         i += 3;

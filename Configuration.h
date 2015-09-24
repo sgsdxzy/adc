@@ -39,7 +39,10 @@ class Configuration
         float calibrateAccelMin[3];
         float calibrateAccelMax[3];
 
-        // FusionFilter
+        // UKF
+        Vector3f accOffset;
+        Vector3f magneticField;
+
 
         // ESC controller
         int controlled_esc[4] = {6, 13, 19, 26};
