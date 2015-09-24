@@ -1,7 +1,6 @@
 #ifndef _GY87_H_
 #define _GY87_H_
 
-#include <pigpio.h>
 #include "MPU6050.h"
 #include "HMC5883L.h"
 #include "BMP085.h"

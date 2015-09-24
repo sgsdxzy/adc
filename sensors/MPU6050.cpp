@@ -2477,7 +2477,7 @@ void MPU6050::resetSensors() {
  */
 void MPU6050::reset() {
     writeBit(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_DEVICE_RESET_BIT, true);
-    gpioDelay(100000); // Delay 100ms
+    usleep(100000); // Delay 100ms
 }
 /** Get sleep mode status.
  * Setting the SLEEP bit in the register puts the device into very low power

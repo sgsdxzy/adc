@@ -7,10 +7,7 @@ project(sensors)
 # libsensors
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-set(SOURCES "BMP085.cpp"  "GY87.cpp"  "HMC5883L.cpp"  "I2Cdev.cpp"
-    "MPU6050_6Axis_MotionApps20.cpp"  "MPU6050.cpp")
+set(SOURCES "BMP085.cpp"  "GY87.cpp"  "HMC5883L.cpp"  "I2Cdev.c"
+    "MPU6050.cpp")
 
 add_library(sensors STATIC ${SOURCES})
-
-target_link_libraries(sensors bcm2835 pigpio pthread)
-
