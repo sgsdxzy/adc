@@ -1,22 +1,48 @@
-#ifndef _CONFIG_ADC_
-#define _CONFIG_ADC_
+#ifndef _CONFIGURATION_ADC_H_
+#define _CONFIGURATION_ADC_H_
 
 #include <iostream>
+#include <Eigen/Dense>
+#include "sensors/GY87.h"
 
-class configuration
+using namespace Eigen;
+
+class Configuration
 {
     public:
         // System
-        float dt = 0.01; // System frequency
+        float dt = 0.005; // in seconds
         float g = 9.80151; // Beijing
         float seaLevelPressure = 101500;
 
         // GY87
-        int16_t gy87Offset[6] = {-1685, 3937, 1803, 0, -17, 109};
+        uint8_t MPU6050DLPFMode = MPU6050_DLPF_BW_42;
+        int16_t MPU6050Rate = 200;
+        uint8_t MPU6050GyroFsr = MPU6050_GYRO_FS_2000;
+        uint8_t MPU6050AccelFSr = MPU6050_ACCEL_FS_2;
+        int16_t MPU6050Offsets[6] = {-1685, 3937, 1803, 0, -17, 109};
 
-        // Altitude filter
-        float baroFilterConfig[3] = {0.55, 1.0, 0.05};
-        float sonarFilterConfig[3] = {0.75, 1.0, 0.035};
+        uint8_t HMC5883LSampleAveraging = HMC5883L_AVERAGING_8;
+        uint8_t HMC5883LDataRate = HMC5883L_RATE_75;
+
+        // Caliberator
+        Matrix3f axisRotationMatrix;
+
+        bool calibrateCompass = true;
+        Vector3f calibrateCompassMax;
+        Vector3f calibrateCompassMin;
+        bool calibrateCompassEllipsoid = true;
+        Vector3f calibrateCompassEllipsoidOffset;
+        Matrix3f calibrateCompassEllipsoidMatrix;
+
+        bool calibrateAccel = true;
+        float calibrateAccelMin[3];
+        float calibrateAccelMax[3];
+
+        // UKF
+        Vector3f accOffset;
+        Vector3f magneticField;
+
 
         // ESC controller
         int controlled_esc[4] = {6, 13, 19, 26};
@@ -56,4 +82,4 @@ using std::endl;
 std::ostream& operator<<(std::ostream& stream, configuration const& data);
 std::istream& operator>>(std::istream& stream, configuration& data);
 
-#endif // _CONFIG_ADC_
+#endif // _CONFIGURATION_ADC_H_

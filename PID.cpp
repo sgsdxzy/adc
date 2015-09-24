@@ -1,4 +1,4 @@
-#include "pid.h"
+#include "Pid.h"
 
 float minusError(float target, float current)
 {
