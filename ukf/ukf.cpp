@@ -120,7 +120,7 @@ void UnscentedKalmanFilter::create_sigma_points() {
         temp = noise * Quaternionr(state.attitude());
         AssertNormalized(temp);
         sigma_points.col(i+1).segment<4>(9) << temp.vec(), temp.w();
-        sigma_points.col(i+1).segment<12>(13) =
+        sigma_points.col(i+1).segment<UKF_STATE_DIM-12>(13) =
             state.segment<UKF_STATE_DIM-12>(13) + S.col(i).segment<UKF_STATE_DIM-12>(12);
 
         /* Create negative sigma point. */
@@ -130,7 +130,7 @@ void UnscentedKalmanFilter::create_sigma_points() {
         AssertNormalized(temp);
         sigma_points.col(i+1+UKF_STATE_DIM).segment<4>(9) <<
             temp.vec(), temp.w();
-        sigma_points.col(i+1+UKF_STATE_DIM).segment<12>(13) =
+        sigma_points.col(i+1+UKF_STATE_DIM).segment<UKF_STATE_DIM-12>(13) =
             state.segment<UKF_STATE_DIM-12>(13) - S.col(i).segment<UKF_STATE_DIM-12>(12);
     }
 }
